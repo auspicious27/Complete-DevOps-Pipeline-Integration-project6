@@ -1610,3 +1610,28 @@ If you use this project in your work, please include:
 - Link to the original repository
 - Author's name: Md Sayeed Firoz
 - Link to author's LinkedIn profile
+
+---
+
+## 🔗 Connect with the Author
+
+**Md Sayeed Firoz**  
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/mdsayeedfiroz/)  
+📧 DevOps Engineer | Cloud Architect | Kubernetes Specialist
+
+### Let's Connect!
+- 💼 **LinkedIn**: [https://www.linkedin.com/in/mdsayeedfiroz/](https://www.linkedin.com/in/mdsayeedfiroz/)
+- 🐛 **GitHub Issues**: Report bugs or request features
+- 💬 **GitHub Discussions**: Ask questions and share ideas
+- ⭐ **Star the Repository**: Show your support!
+
+### Thank You!
+Thank you for using this project! If you found it helpful, please consider:
+- ⭐ Starring the repository
+- 🔗 Sharing with others
+- 🤝 Contributing to the project
+- 💬 Leaving feedback
+
+---
+
+**Made with ❤️ by [Md Sayeed Firoz](https://www.linkedin.com/in/mdsayeedfiroz/)**
