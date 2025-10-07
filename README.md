@@ -109,6 +109,25 @@ sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker $USER
 
+# RHEL 10 / CentOS Stream
+sudo dnf update -y
+sudo dnf install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Amazon Linux 2023
+sudo dnf update -y
+sudo dnf install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+# Windows (PowerShell)
+# Install Docker Desktop from: https://www.docker.com/products/docker-desktop
+# Or use Chocolatey:
+choco install docker-desktop -y
+
 # macOS
 brew install docker
 brew install --cask docker
@@ -125,10 +144,21 @@ docker run hello-world
 #### Step 2: Install Kubernetes Cluster (Choose One)
 ```bash
 # Option A: Minikube (Recommended for beginners)
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 minikube start --memory=8192 --cpus=4 --driver=docker
 minikube status
+
+# Windows (PowerShell)
+# Download from: https://minikube.sigs.k8s.io/docs/start/
+# Or use Chocolatey:
+choco install minikube -y
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# macOS
+brew install minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
 
 # Expected Output:
 # minikube
@@ -139,11 +169,22 @@ minikube status
 # kubeconfig: Configured
 
 # Option B: Kind (Lightweight alternative)
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
 chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 kind create cluster --name devops-pipeline
 kind get clusters
+
+# Windows (PowerShell)
+# Download from: https://kind.sigs.k8s.io/docs/user/quick-start/
+# Or use Chocolatey:
+choco install kind -y
+kind create cluster --name devops-pipeline
+
+# macOS
+brew install kind
+kind create cluster --name devops-pipeline
 
 # Expected Output:
 # devops-pipeline
@@ -151,8 +192,17 @@ kind get clusters
 
 #### Step 3: Install kubectl
 ```bash
-# Download and install kubectl
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Windows (PowerShell)
+# Download from: https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/
+# Or use Chocolatey:
+choco install kubernetes-cli -y
+
+# macOS
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # Verify kubectl installation
@@ -166,8 +216,16 @@ kubectl cluster-info
 
 #### Step 4: Install Helm
 ```bash
-# Install Helm
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Windows (PowerShell)
+# Download from: https://helm.sh/docs/intro/install/
+# Or use Chocolatey:
+choco install kubernetes-helm -y
+
+# macOS
+brew install helm
 
 # Verify Helm installation
 helm version
@@ -178,8 +236,17 @@ helm version
 
 #### Step 5: Install ArgoCD CLI
 ```bash
-# Install ArgoCD CLI
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+
+# Windows (PowerShell)
+# Download from: https://argo-cd.readthedocs.io/en/stable/cli_installation/
+# Or use Chocolatey:
+choco install argocd -y
+
+# macOS
+curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-darwin-amd64
 chmod +x /usr/local/bin/argocd
 
 # Verify ArgoCD CLI installation
@@ -191,10 +258,20 @@ argocd version --client
 
 #### Step 6: Install Velero CLI
 ```bash
-# Install Velero CLI
+# Linux (Ubuntu/Debian/RHEL/Amazon Linux)
 curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
 tar -xzf velero-v1.11.1-linux-amd64.tar.gz
 sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+
+# Windows (PowerShell)
+# Download from: https://velero.io/docs/main/basic-install/
+# Or use Chocolatey:
+choco install velero -y
+
+# macOS
+curl -fsSL -o velero-v1.11.1-darwin-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-darwin-amd64.tar.gz
+tar -xzf velero-v1.11.1-darwin-amd64.tar.gz
+sudo mv velero-v1.11.1-darwin-amd64/velero /usr/local/bin/
 
 # Verify Velero CLI installation
 velero version --client
@@ -207,6 +284,17 @@ velero version --client
 ```bash
 # Ubuntu/Debian
 sudo apt-get update && sudo apt-get install git -y
+
+# RHEL 10 / CentOS Stream
+sudo dnf install -y git
+
+# Amazon Linux 2023
+sudo dnf install -y git
+
+# Windows (PowerShell)
+# Download from: https://git-scm.com/download/win
+# Or use Chocolatey:
+choco install git -y
 
 # macOS
 brew install git
