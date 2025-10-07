@@ -1,13 +1,5 @@
 # Complete DevOps Pipeline Integration
 
-## 👨‍💻 Author
-
-**Md Sayeed Firoz**  
-🔗 [LinkedIn Profile](https://www.linkedin.com/in/mdsayeedfiroz/)  
-📧 DevOps Engineer | Cloud Architect | Kubernetes Specialist
-
----
-
 ## 🎯 What This Project Does (Simple Explanation)
 
 This project creates a **complete automated system** that helps developers deploy their applications easily and safely. Think of it as a **smart factory** for software:
@@ -1634,4 +1626,4 @@ Thank you for using this project! If you found it helpful, please consider:
 
 ---
 
-**Made with ❤️ by [Md Sayeed Firoz](https://www.linkedin.com/in/mdsayeedfiroz/)**
+**[❤️](https://www.linkedin.com/in/mdsayeedfiroz/) [Made with ❤️ by Md Sayeed Firoz](https://www.linkedin.com/in/mdsayeedfiroz/)**
