@@ -339,6 +339,122 @@ cd Complete-DevOps-Pipeline-Integration-project6
 # Expected Output: Lightweight Kubernetes cluster
 ```
 
+### Method 7: RHEL 10 / CentOS Stream
+```bash
+# Step 1: Install required packages
+sudo dnf update -y
+sudo dnf install -y curl wget git docker
+
+# Step 2: Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Step 3: Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Step 4: Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Step 5: Clone and run
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh
+
+# Expected Output: Complete pipeline on RHEL 10
+```
+
+### Method 8: Amazon Linux 2023
+```bash
+# Step 1: Install required packages
+sudo dnf update -y
+sudo dnf install -y curl wget git docker
+
+# Step 2: Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+# Step 3: Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Step 4: Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Step 5: Clone and run
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh
+
+# Expected Output: Complete pipeline on Amazon Linux 2023
+```
+
+### Method 9: Windows (Native PowerShell)
+```bash
+# Step 1: Install Chocolatey (Package Manager)
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Step 2: Install required software
+choco install docker-desktop -y
+choco install git -y
+choco install kubernetes-cli -y
+
+# Step 3: Install Minikube
+choco install minikube -y
+
+# Step 4: Start Minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Step 5: Clone and run
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+# Note: Use Git Bash or WSL for shell scripts
+bash -c "chmod +x *.sh && chmod +x */*.sh && ./deploy-all.sh"
+
+# Expected Output: Complete pipeline on Windows
+```
+
+### Method 10: Windows (WSL2 with Ubuntu)
+```bash
+# Step 1: Install WSL2 and Ubuntu
+wsl --install -d Ubuntu
+
+# Step 2: Open Ubuntu terminal and update
+sudo apt update && sudo apt upgrade -y
+
+# Step 3: Install Docker in WSL2
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Step 4: Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Step 5: Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Step 6: Clone and run
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh
+
+# Expected Output: Complete pipeline on Windows WSL2
+```
+
 ## 🚀 Quick Start (Complete Output Example)
 
 ### One-Command Deployment
@@ -846,22 +962,74 @@ sample-web-app-7d4b8c9f5-abc12   2/2     Running   0          30s
 - ✅ Good for CI/CD testing
 - ✅ Minimal resource usage
 
+### For Enterprise Linux
+**Method 7: RHEL 10 / CentOS Stream**
+- ✅ Enterprise-grade Linux
+- ✅ Red Hat ecosystem
+- ✅ Long-term support
+- ✅ Production-ready
+
+### For AWS Environments
+**Method 8: Amazon Linux 2023**
+- ✅ Optimized for AWS
+- ✅ Pre-configured packages
+- ✅ AWS integration
+- ✅ Cloud-optimized
+
+### For Windows Users
+**Method 9: Windows Native PowerShell**
+- ✅ Native Windows experience
+- ✅ PowerShell integration
+- ✅ Chocolatey package manager
+- ✅ Windows-specific tools
+
+### For Windows with Linux
+**Method 10: Windows WSL2**
+- ✅ Best of both worlds
+- ✅ Linux compatibility
+- ✅ Windows integration
+- ✅ Docker support
+
 ## 🚀 Quick Start Commands
 
 ### Copy-Paste Ready Commands
 ```bash
-# For Linux/Mac users (most common)
+# For Ubuntu/Debian users (most common)
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh
+
+# For RHEL 10 / CentOS Stream users
+sudo dnf install -y curl wget git docker
+sudo systemctl start docker && sudo systemctl enable docker
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh
+
+# For Amazon Linux 2023 users
+sudo dnf install -y curl wget git docker
+sudo systemctl start docker && sudo systemctl enable docker
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 chmod +x *.sh && chmod +x */*.sh
 ./deploy-all.sh
 
 # For Windows users (with WSL2)
-wsl
+wsl --install -d Ubuntu
+# Then in WSL2 Ubuntu terminal:
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 chmod +x *.sh && chmod +x */*.sh
 ./deploy-all.sh
+
+# For Windows users (Native PowerShell)
+# Install Chocolatey first, then:
+choco install docker-desktop git kubernetes-cli minikube -y
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+bash -c "chmod +x *.sh && chmod +x */*.sh && ./deploy-all.sh"
 
 # For Docker Desktop users
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
