@@ -1574,10 +1574,9 @@ We welcome contributions to this project! Whether you're fixing bugs, adding fea
 
 ### Questions or Need Help?
 
-- 📧 **Email**: Contact through LinkedIn
-- 🔗 **LinkedIn**: [Md Sayeed Firoz](https://www.linkedin.com/in/mdsayeedfiroz/)
 - 🐛 **Issues**: Create an issue on GitHub for bugs or feature requests
 - 💬 **Discussions**: Use GitHub Discussions for questions
+- 🔗 **Contact**: See "Connect with the Author" section below
 
 ### Recognition
 
@@ -1600,15 +1599,13 @@ This project is provided as-is for educational and demonstration purposes.
 
 If you use this project in your work, please include:
 - Link to the original repository
-- Author's name: Md Sayeed Firoz
-- Link to author's LinkedIn profile
+- Author's name and LinkedIn profile (see footer)
 
 ---
 
 ## 🔗 Connect with the Author
 
 **Md Sayeed Firoz**  
-🔗 [LinkedIn Profile](https://www.linkedin.com/in/mdsayeedfiroz/)  
 📧 DevOps Engineer | Cloud Architect | Kubernetes Specialist
 
 ### Let's Connect!
