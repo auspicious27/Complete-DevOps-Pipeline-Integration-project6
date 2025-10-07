@@ -1,0 +1,136 @@
+# Trivy Security Scanning Job
+# This creates a Kubernetes Job that runs Trivy security scans
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: trivy-scan-job
+  namespace: security
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: trivy-scanner
+        image: aquasec/trivy:0.45.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "🔒 Starting Trivy security scan..."
+          
+          # Install Trivy if not present
+          if ! command -v trivy &> /dev/null; then
+            echo "Installing Trivy..."
+            apk add --no-cache curl
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          fi
+          
+          # Scan filesystem
+          echo "Scanning filesystem for vulnerabilities..."
+          trivy fs --format json --output /tmp/trivy-fs-report.json /workspace
+          trivy fs --format table /workspace
+          
+          # Scan container image if provided
+          if [ ! -z "$IMAGE_TO_SCAN" ]; then
+            echo "Scanning container image: $IMAGE_TO_SCAN"
+            trivy image --format json --output /tmp/trivy-image-report.json $IMAGE_TO_SCAN
+            trivy image --format table $IMAGE_TO_SCAN
+            
+            # Check for critical vulnerabilities
+            CRITICAL_COUNT=$(trivy image --severity CRITICAL --format json $IMAGE_TO_SCAN | jq -r '.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL") | .VulnerabilityID' | wc -l)
+            
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "❌ CRITICAL: Found $CRITICAL_COUNT critical vulnerabilities!"
+              echo "Blocking deployment due to security issues"
+              exit 1
+            else
+              echo "✅ No critical vulnerabilities found"
+            fi
+          fi
+          
+          # Generate HTML reports
+          trivy fs --format template --template "@contrib/html.tpl" --output /tmp/trivy-fs-report.html /workspace
+          
+          if [ ! -z "$IMAGE_TO_SCAN" ]; then
+            trivy image --format template --template "@contrib/html.tpl" --output /tmp/trivy-image-report.html $IMAGE_TO_SCAN
+          fi
+          
+          echo "✅ Security scan completed successfully!"
+        env:
+        - name: IMAGE_TO_SCAN
+          value: "nginx:1.21-alpine"  # Replace with your image
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: reports
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: workspace
+        hostPath:
+          path: /tmp/workspace
+          type: Directory
+      - name: reports
+        emptyDir: {}
+
+---
+# Trivy CronJob for regular security scans
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: trivy-scheduled-scan
+  namespace: security
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: trivy-scanner
+            image: aquasec/trivy:0.45.0
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "🔒 Running scheduled Trivy security scan..."
+              
+              # Scan all running pods
+              kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.status.phase=="Running") | .spec.containers[].image' | sort -u | while read image; do
+                echo "Scanning image: $image"
+                trivy image --severity HIGH,CRITICAL --format table $image
+                
+                # Check for critical vulnerabilities
+                CRITICAL_COUNT=$(trivy image --severity CRITICAL --format json $image | jq -r '.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL") | .VulnerabilityID' | wc -l)
+                
+                if [ "$CRITICAL_COUNT" -gt 0 ]; then
+                  echo "❌ CRITICAL: Found $CRITICAL_COUNT critical vulnerabilities in $image"
+                  # Send alert (implement your notification system)
+                fi
+              done
+              
+              echo "✅ Scheduled security scan completed!"
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "250m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+
+---
+# Namespace for security scanning
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: security
+  labels:
+    name: security

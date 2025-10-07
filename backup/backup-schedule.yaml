@@ -1,0 +1,128 @@
+# Velero Backup Schedules
+# This defines automated backup schedules for different environments
+
+---
+# Daily backup schedule for production
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-prod-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  template:
+    includedNamespaces:
+    - sample-app-prod
+    - argocd
+    - monitoring
+    excludedNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    ttl: "720h"  # 30 days
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    metadata:
+      labels:
+        environment: production
+        backup-type: daily
+    hooks:
+      resources:
+      - name: pre-backup-hook
+        includedNamespaces:
+        - sample-app-prod
+        labelSelector:
+          matchLabels:
+            app: sample-web-app
+        pre:
+        - exec:
+            container: web-app
+            command:
+            - /bin/sh
+            - -c
+            - "echo 'Pre-backup hook: Flushing caches and preparing for backup'"
+        post:
+        - exec:
+            container: web-app
+            command:
+            - /bin/sh
+            - -c
+            - "echo 'Post-backup hook: Backup completed successfully'"
+
+---
+# Weekly backup schedule for staging
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: weekly-staging-backup
+  namespace: velero
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+  template:
+    includedNamespaces:
+    - sample-app-staging
+    - jenkins
+    excludedNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    ttl: "168h"  # 7 days
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    metadata:
+      labels:
+        environment: staging
+        backup-type: weekly
+
+---
+# Monthly backup schedule for development
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: monthly-dev-backup
+  namespace: velero
+spec:
+  schedule: "0 4 1 * *"  # Monthly on the 1st at 4 AM
+  template:
+    includedNamespaces:
+    - sample-app-dev
+    - security
+    excludedNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    ttl: "720h"  # 30 days
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    metadata:
+      labels:
+        environment: development
+        backup-type: monthly
+
+---
+# Disaster Recovery Backup (complete cluster backup)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: disaster-recovery-backup
+  namespace: velero
+spec:
+  schedule: "0 1 * * 0"  # Weekly on Sunday at 1 AM
+  template:
+    includedNamespaces:
+    - "*"
+    excludedNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    ttl: "2160h"  # 90 days
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    metadata:
+      labels:
+        backup-type: disaster-recovery
+        critical: "true"

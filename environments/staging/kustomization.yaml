@@ -1,0 +1,43 @@
+# Staging Environment Configuration
+# This file configures the staging environment using Kustomize
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-app-staging
+
+resources:
+- ../../applications/sample-app
+- deployment-patch.yaml
+- service-patch.yaml
+
+commonLabels:
+  environment: staging
+  tier: staging
+
+patchesStrategicMerge:
+- deployment-patch.yaml
+- service-patch.yaml
+
+images:
+- name: nginx
+  newTag: 1.21-alpine
+
+replicas:
+- name: sample-web-app
+  count: 3
+
+configMapGenerator:
+- name: app-config
+  literals:
+  - ENVIRONMENT=staging
+  - LOG_LEVEL=info
+  - FEATURE_FLAGS=staging
+  - DATABASE_URL=postgresql://staging-db:5432/sampleapp
+  - REDIS_URL=redis://staging-redis:6379
+
+secretGenerator:
+- name: app-secrets
+  literals:
+  - API_KEY=staging-api-key-456
+  - JWT_SECRET=staging-jwt-secret-key

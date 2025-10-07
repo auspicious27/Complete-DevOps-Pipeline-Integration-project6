@@ -1,0 +1,99 @@
+# Blue-Green Deployment - Blue Environment
+# This represents the current production environment (Blue)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-web-app-blue
+  namespace: sample-app-prod
+  labels:
+    app: sample-web-app
+    version: blue
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sample-web-app
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: sample-web-app
+        version: blue
+        environment: production
+    spec:
+      containers:
+      - name: web-app
+        image: nginx:1.21-alpine
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: VERSION
+          value: "blue"
+        - name: LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+---
+# Blue Service - Currently Active
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-web-app-blue-service
+  namespace: sample-app-prod
+  labels:
+    app: sample-web-app
+    version: blue
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: sample-web-app
+    version: blue
+
+---
+# Production Service - Routes traffic to active environment
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-web-app-prod
+  namespace: sample-app-prod
+  labels:
+    app: sample-web-app
+    environment: production
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: sample-web-app
+    version: blue  # Currently pointing to blue

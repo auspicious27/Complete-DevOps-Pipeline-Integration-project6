@@ -1,0 +1,23 @@
+# Kustomization file for the sample application
+# This allows for environment-specific configurations
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-app
+
+resources:
+- namespace.yaml
+- deployment.yaml
+- service.yaml
+
+commonLabels:
+  app: sample-web-app
+  project: devops-pipeline
+
+images:
+- name: nginx
+  newTag: 1.21-alpine
+
+patchesStrategicMerge:
+- deployment-patch.yaml

@@ -1,0 +1,13 @@
+# Simple ArgoCD Installation
+# This uses the official ArgoCD installation manifest
+# Apply with: kubectl apply -f install-simple.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+
+---
+# Note: In production, use the official ArgoCD installation:
+# kubectl create namespace argocd
+# kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml

@@ -1,0 +1,10 @@
+# Sample Application Namespace
+# Creates a dedicated namespace for the sample application
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample-app
+  labels:
+    name: sample-app
+    environment: development

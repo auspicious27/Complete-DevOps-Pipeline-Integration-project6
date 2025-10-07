@@ -1,0 +1,13 @@
+# Pod Disruption Budget for Production
+# This ensures high availability during cluster maintenance
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sample-web-app-pdb
+  namespace: sample-app-prod
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: sample-web-app

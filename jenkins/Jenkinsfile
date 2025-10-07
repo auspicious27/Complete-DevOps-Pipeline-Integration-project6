@@ -1,0 +1,275 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Docker registry configuration
+        DOCKER_REGISTRY = 'your-registry.com'
+        IMAGE_NAME = 'devops-pipeline-app'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        
+        // Kubernetes configuration
+        KUBECONFIG = credentials('kubeconfig')
+        
+        // Security scanning tools
+        TRIVY_VERSION = '0.45.0'
+        SONAR_TOKEN = credentials('sonar-token')
+        
+        // Git configuration
+        GIT_REPO = 'https://github.com/your-username/devops-pipeline.git'
+        GIT_BRANCH = env.BRANCH_NAME
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔍 Checking out source code...'
+                checkout scm
+            }
+        }
+        
+        stage('Code Quality Analysis') {
+            parallel {
+                stage('SonarQube Analysis') {
+                    steps {
+                        script {
+                            echo '🔍 Running SonarQube analysis...'
+                            withSonarQubeEnv('SonarQube') {
+                                sh '''
+                                    # Install SonarQube Scanner if not present
+                                    if ! command -v sonar-scanner &> /dev/null; then
+                                        wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+                                        unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+                                        export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
+                                    fi
+                                    
+                                    # Run SonarQube analysis
+                                    sonar-scanner \
+                                        -Dsonar.projectKey=devops-pipeline \
+                                        -Dsonar.sources=. \
+                                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                                        -Dsonar.login=${SONAR_TOKEN}
+                                '''
+                            }
+                        }
+                    }
+                }
+                
+                stage('Security Scan - Trivy') {
+                    steps {
+                        script {
+                            echo '🔒 Running Trivy security scan...'
+                            sh '''
+                                # Install Trivy if not present
+                                if ! command -v trivy &> /dev/null; then
+                                    wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+                                    tar zxvf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+                                    sudo mv trivy /usr/local/bin/
+                                fi
+                                
+                                # Scan for vulnerabilities
+                                trivy fs --format json --output trivy-report.json .
+                                
+                                # Generate HTML report
+                                trivy fs --format template --template "@contrib/html.tpl" --output trivy-report.html .
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Application') {
+            steps {
+                script {
+                    echo '🏗️ Building application...'
+                    sh '''
+                        # Build the application (example for a Node.js app)
+                        if [ -f package.json ]; then
+                            npm ci
+                            npm run build
+                        fi
+                        
+                        # Build Docker image
+                        docker build -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                    '''
+                }
+            }
+        }
+        
+        stage('Security Scan - Container Image') {
+            steps {
+                script {
+                    echo '🔒 Scanning container image for vulnerabilities...'
+                    sh '''
+                        # Scan the built image
+                        trivy image --format json --output trivy-image-report.json ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        
+                        # Check for critical vulnerabilities
+                        CRITICAL_VULNS=$(trivy image --severity CRITICAL --format json ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} | jq '.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")' | wc -l)
+                        
+                        if [ "$CRITICAL_VULNS" -gt 0 ]; then
+                            echo "❌ Critical vulnerabilities found: $CRITICAL_VULNS"
+                            echo "Blocking deployment due to security issues"
+                            exit 1
+                        else
+                            echo "✅ No critical vulnerabilities found"
+                        fi
+                    '''
+                }
+            }
+        }
+        
+        stage('Push to Registry') {
+            when {
+                not { branch 'main' }
+            }
+            steps {
+                script {
+                    echo '📦 Pushing image to registry...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            echo $DOCKER_PASS | docker login ${DOCKER_REGISTRY} -u $DOCKER_USER --password-stdin
+                            docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                            docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Development') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    echo '🚀 Deploying to Development environment...'
+                    sh '''
+                        # Update Kubernetes manifests with new image
+                        sed -i "s|image: .*|image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|g" applications/sample-app/deployment.yaml
+                        
+                        # Commit and push changes to trigger ArgoCD sync
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@company.com"
+                        git add applications/sample-app/deployment.yaml
+                        git commit -m "Deploy ${IMAGE_NAME}:${IMAGE_TAG} to development [skip ci]" || true
+                        git push origin develop
+                        
+                        # Wait for ArgoCD to sync
+                        sleep 30
+                        
+                        # Verify deployment
+                        kubectl rollout status deployment/sample-web-app -n sample-app --timeout=300s
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                branch 'staging'
+            }
+            steps {
+                script {
+                    echo '🚀 Deploying to Staging environment...'
+                    sh '''
+                        # Update staging manifests
+                        sed -i "s|image: .*|image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|g" environments/staging/deployment.yaml
+                        
+                        # Commit and push changes
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@company.com"
+                        git add environments/staging/deployment.yaml
+                        git commit -m "Deploy ${IMAGE_NAME}:${IMAGE_TAG} to staging [skip ci]" || true
+                        git push origin staging
+                        
+                        # Run integration tests
+                        echo "Running integration tests..."
+                        # Add your integration test commands here
+                        
+                        # Verify deployment
+                        kubectl rollout status deployment/sample-web-app -n sample-app-staging --timeout=300s
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    echo '🚀 Deploying to Production environment...'
+                    sh '''
+                        # Update production manifests
+                        sed -i "s|image: .*|image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|g" environments/prod/deployment.yaml
+                        
+                        # Commit and push changes
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@company.com"
+                        git add environments/prod/deployment.yaml
+                        git commit -m "Deploy ${IMAGE_NAME}:${IMAGE_TAG} to production [skip ci]" || true
+                        git push origin main
+                        
+                        # Implement blue-green deployment
+                        echo "Implementing blue-green deployment..."
+                        # Add blue-green deployment logic here
+                        
+                        # Verify deployment
+                        kubectl rollout status deployment/sample-web-app -n sample-app-prod --timeout=300s
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                echo '📊 Publishing test results and reports...'
+                // Publish test results
+                publishTestResults testResultsPattern: 'test-results.xml'
+                
+                // Publish security scan results
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: '.',
+                    reportFiles: 'trivy-report.html',
+                    reportName: 'Trivy Security Report'
+                ])
+                
+                // Archive artifacts
+                archiveArtifacts artifacts: 'trivy-*.json,trivy-*.html', fingerprint: true
+            }
+        }
+        
+        success {
+            echo '✅ Pipeline completed successfully!'
+        }
+        
+        failure {
+            echo '❌ Pipeline failed!'
+            // Send notifications
+            emailext (
+                subject: "Pipeline Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+                body: "The pipeline failed. Please check the build logs.",
+                to: "devops-team@company.com"
+            )
+        }
+        
+        cleanup {
+            script {
+                echo '🧹 Cleaning up...'
+                // Clean up Docker images
+                sh '''
+                    docker rmi ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} || true
+                    docker rmi ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest || true
+                '''
+            }
+        }
+    }
+}

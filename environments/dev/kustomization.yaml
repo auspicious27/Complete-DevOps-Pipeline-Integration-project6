@@ -1,0 +1,43 @@
+# Development Environment Configuration
+# This file configures the development environment using Kustomize
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-app-dev
+
+resources:
+- ../../applications/sample-app
+- deployment-patch.yaml
+- service-patch.yaml
+
+commonLabels:
+  environment: development
+  tier: dev
+
+patchesStrategicMerge:
+- deployment-patch.yaml
+- service-patch.yaml
+
+images:
+- name: nginx
+  newTag: 1.21-alpine
+
+replicas:
+- name: sample-web-app
+  count: 2
+
+configMapGenerator:
+- name: app-config
+  literals:
+  - ENVIRONMENT=development
+  - LOG_LEVEL=debug
+  - FEATURE_FLAGS=enabled
+  - DATABASE_URL=postgresql://dev-db:5432/sampleapp
+  - REDIS_URL=redis://dev-redis:6379
+
+secretGenerator:
+- name: app-secrets
+  literals:
+  - API_KEY=dev-api-key-123
+  - JWT_SECRET=dev-jwt-secret-key
