@@ -279,8 +279,18 @@ install_rhel_prerequisites() {
         else
             print_status "curl is already available"
         fi
+        
+        # Install additional packages needed for Minikube none driver
+        print_step "Installing additional packages for Minikube none driver"
+        $INSTALL_COMMAND conntrack-tools socat --allowerasing || {
+            print_warning "Some Minikube packages failed to install, trying alternative approach"
+            $INSTALL_COMMAND conntrack-tools socat --skip-broken
+        }
     else
         $INSTALL_COMMAND curl wget git unzip
+        # Install additional packages needed for Minikube none driver
+        print_step "Installing additional packages for Minikube none driver"
+        $INSTALL_COMMAND conntrack-tools socat
     fi
     
     # Install Docker
@@ -454,9 +464,16 @@ setup_linux_kubernetes() {
     
     # Check if running as root and handle accordingly
     if [[ $EUID -eq 0 ]]; then
-        print_warning "Running as root detected. Using --driver=none for better compatibility"
-        # For root users, use none driver which is more reliable on EC2
-        minikube start --memory=8192 --cpus=4 --driver=none --force
+        print_warning "Running as root detected. Trying --driver=none first, then docker as fallback"
+        
+        # Try none driver first (more reliable on EC2)
+        if minikube start --memory=8192 --cpus=4 --driver=none --force; then
+            print_status "Successfully started Minikube with none driver"
+        else
+            print_warning "None driver failed, trying docker driver with --force"
+            minikube delete --all --purge 2>/dev/null || true
+            minikube start --memory=8192 --cpus=4 --driver=docker --force
+        fi
     else
         # Start Minikube normally for non-root users
         minikube start --memory=8192 --cpus=4 --driver=docker
