@@ -66,12 +66,12 @@ print_os_info() {
 detect_os() {
     print_header "Detecting Operating System"
     
-    # Detect OS type
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Detect OS type with comprehensive checks
+    if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "linux"* ]]; then
         OS_TYPE="linux"
         print_os_info "Detected: Linux"
         
-        # Detect Linux distribution
+        # Detect Linux distribution with multiple methods
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             OS_DISTRO=$ID
@@ -82,9 +82,24 @@ detect_os() {
         elif [ -f /etc/debian_version ]; then
             OS_DISTRO="debian"
             print_os_info "Distribution: Debian"
+        elif [ -f /etc/centos-release ]; then
+            OS_DISTRO="centos"
+            print_os_info "Distribution: CentOS"
+        elif [ -f /etc/fedora-release ]; then
+            OS_DISTRO="fedora"
+            print_os_info "Distribution: Fedora"
+        elif [ -f /etc/arch-release ]; then
+            OS_DISTRO="arch"
+            print_os_info "Distribution: Arch Linux"
+        elif [ -f /etc/SuSE-release ]; then
+            OS_DISTRO="suse"
+            print_os_info "Distribution: SUSE Linux"
+        elif command -v lsb_release &> /dev/null; then
+            OS_DISTRO=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+            print_os_info "Distribution: $(lsb_release -sd)"
         else
-            OS_DISTRO="unknown"
-            print_warning "Unknown Linux distribution"
+            OS_DISTRO="generic"
+            print_warning "Unknown Linux distribution, using generic setup"
         fi
         
     elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -92,29 +107,53 @@ detect_os() {
         OS_DISTRO="macos"
         print_os_info "Detected: macOS"
         
-    elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ "$OSTYPE" == "win64" ]]; then
         OS_TYPE="windows"
         OS_DISTRO="windows"
         print_os_info "Detected: Windows"
         
+    elif [[ "$OSTYPE" == "freebsd"* ]]; then
+        OS_TYPE="freebsd"
+        OS_DISTRO="freebsd"
+        print_os_info "Detected: FreeBSD"
+        
+    elif [[ "$OSTYPE" == "openbsd"* ]]; then
+        OS_TYPE="openbsd"
+        OS_DISTRO="openbsd"
+        print_os_info "Detected: OpenBSD"
+        
     else
         OS_TYPE="unknown"
         OS_DISTRO="unknown"
-        print_error "Unknown operating system: $OSTYPE"
-        exit 1
+        print_warning "Unknown operating system: $OSTYPE, trying generic setup"
     fi
     
     # Set package manager and commands based on OS
     case $OS_DISTRO in
-        "ubuntu"|"debian")
+        "ubuntu"|"debian"|"linuxmint"|"pop"|"elementary")
             PACKAGE_MANAGER="apt"
             UPDATE_COMMAND="sudo apt update"
             INSTALL_COMMAND="sudo apt install -y"
             ;;
-        "rhel"|"centos"|"fedora"|"amzn")
+        "rhel"|"centos"|"fedora"|"amzn"|"rocky"|"almalinux"|"oracle")
             PACKAGE_MANAGER="dnf"
             UPDATE_COMMAND="sudo dnf update -y"
             INSTALL_COMMAND="sudo dnf install -y"
+            ;;
+        "arch"|"manjaro"|"endeavouros")
+            PACKAGE_MANAGER="pacman"
+            UPDATE_COMMAND="sudo pacman -Syu --noconfirm"
+            INSTALL_COMMAND="sudo pacman -S --noconfirm"
+            ;;
+        "opensuse"|"suse"|"sles")
+            PACKAGE_MANAGER="zypper"
+            UPDATE_COMMAND="sudo zypper refresh"
+            INSTALL_COMMAND="sudo zypper install -y"
+            ;;
+        "alpine")
+            PACKAGE_MANAGER="apk"
+            UPDATE_COMMAND="sudo apk update"
+            INSTALL_COMMAND="sudo apk add"
             ;;
         "macos")
             PACKAGE_MANAGER="brew"
@@ -126,8 +165,51 @@ detect_os() {
             UPDATE_COMMAND="choco upgrade all -y"
             INSTALL_COMMAND="choco install -y"
             ;;
+        "freebsd")
+            PACKAGE_MANAGER="pkg"
+            UPDATE_COMMAND="sudo pkg update"
+            INSTALL_COMMAND="sudo pkg install -y"
+            ;;
+        "openbsd")
+            PACKAGE_MANAGER="pkg_add"
+            UPDATE_COMMAND="sudo pkg_add -u"
+            INSTALL_COMMAND="sudo pkg_add"
+            ;;
+        "generic"|"unknown")
+            print_warning "Unknown distribution, trying to detect package manager"
+            if command -v apt &> /dev/null; then
+                PACKAGE_MANAGER="apt"
+                UPDATE_COMMAND="sudo apt update"
+                INSTALL_COMMAND="sudo apt install -y"
+            elif command -v dnf &> /dev/null; then
+                PACKAGE_MANAGER="dnf"
+                UPDATE_COMMAND="sudo dnf update -y"
+                INSTALL_COMMAND="sudo dnf install -y"
+            elif command -v yum &> /dev/null; then
+                PACKAGE_MANAGER="yum"
+                UPDATE_COMMAND="sudo yum update -y"
+                INSTALL_COMMAND="sudo yum install -y"
+            elif command -v pacman &> /dev/null; then
+                PACKAGE_MANAGER="pacman"
+                UPDATE_COMMAND="sudo pacman -Syu --noconfirm"
+                INSTALL_COMMAND="sudo pacman -S --noconfirm"
+            elif command -v zypper &> /dev/null; then
+                PACKAGE_MANAGER="zypper"
+                UPDATE_COMMAND="sudo zypper refresh"
+                INSTALL_COMMAND="sudo zypper install -y"
+            elif command -v apk &> /dev/null; then
+                PACKAGE_MANAGER="apk"
+                UPDATE_COMMAND="sudo apk update"
+                INSTALL_COMMAND="sudo apk add"
+            else
+                print_error "No supported package manager found"
+                PACKAGE_MANAGER="unknown"
+                UPDATE_COMMAND="echo 'Please update your system manually'"
+                INSTALL_COMMAND="echo 'Please install packages manually'"
+            fi
+            ;;
         *)
-            print_warning "Unknown distribution, using generic commands"
+            print_warning "Unknown distribution: $OS_DISTRO, using generic commands"
             PACKAGE_MANAGER="unknown"
             UPDATE_COMMAND="echo 'Please update your system manually'"
             INSTALL_COMMAND="echo 'Please install packages manually'"
@@ -177,11 +259,20 @@ install_prerequisites() {
     print_header "Installing Prerequisites"
     
     case $OS_DISTRO in
-        "ubuntu"|"debian")
+        "ubuntu"|"debian"|"linuxmint"|"pop"|"elementary")
             install_ubuntu_prerequisites
             ;;
-        "rhel"|"centos"|"fedora"|"amzn")
+        "rhel"|"centos"|"fedora"|"amzn"|"rocky"|"almalinux"|"oracle")
             install_rhel_prerequisites
+            ;;
+        "arch"|"manjaro"|"endeavouros")
+            install_arch_prerequisites
+            ;;
+        "opensuse"|"suse"|"sles")
+            install_suse_prerequisites
+            ;;
+        "alpine")
+            install_alpine_prerequisites
             ;;
         "macos")
             install_macos_prerequisites
@@ -189,9 +280,19 @@ install_prerequisites() {
         "windows")
             install_windows_prerequisites
             ;;
+        "freebsd")
+            install_freebsd_prerequisites
+            ;;
+        "openbsd")
+            install_openbsd_prerequisites
+            ;;
+        "generic"|"unknown")
+            install_generic_prerequisites
+            ;;
         *)
             print_error "Cannot install prerequisites for unknown OS: $OS_DISTRO"
-            exit 1
+            print_warning "Trying generic installation method..."
+            install_generic_prerequisites
             ;;
     esac
 }
@@ -431,6 +532,265 @@ install_windows_prerequisites() {
     
     print_success "Windows prerequisites installed"
     print_warning "Please restart your terminal/PowerShell after installation"
+}
+
+# Arch Linux specific installation
+install_arch_prerequisites() {
+    print_step "Installing prerequisites for Arch Linux"
+    
+    # Update package database
+    $UPDATE_COMMAND
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip docker kubectl minikube helm
+    
+    # Start and enable Docker
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker $USER
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "Arch Linux prerequisites installed"
+}
+
+# SUSE Linux specific installation
+install_suse_prerequisites() {
+    print_step "Installing prerequisites for SUSE Linux"
+    
+    # Update package database
+    $UPDATE_COMMAND
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip docker
+    
+    # Start and enable Docker
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker $USER
+    
+    # Install kubectl
+    print_step "Installing kubectl"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    
+    # Install Minikube
+    print_step "Installing Minikube"
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    
+    # Install Helm
+    print_step "Installing Helm"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "SUSE Linux prerequisites installed"
+}
+
+# Alpine Linux specific installation
+install_alpine_prerequisites() {
+    print_step "Installing prerequisites for Alpine Linux"
+    
+    # Update package database
+    $UPDATE_COMMAND
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip docker
+    
+    # Start and enable Docker
+    sudo service docker start
+    sudo rc-update add docker boot
+    
+    # Install kubectl
+    print_step "Installing kubectl"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    
+    # Install Minikube
+    print_step "Installing Minikube"
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    
+    # Install Helm
+    print_step "Installing Helm"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "Alpine Linux prerequisites installed"
+}
+
+# FreeBSD specific installation
+install_freebsd_prerequisites() {
+    print_step "Installing prerequisites for FreeBSD"
+    
+    # Update package database
+    $UPDATE_COMMAND
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip
+    
+    # Install Docker
+    print_step "Installing Docker"
+    $INSTALL_COMMAND docker
+    
+    # Start and enable Docker
+    sudo service docker start
+    sudo sysrc docker_enable="YES"
+    
+    # Install kubectl
+    print_step "Installing kubectl"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g wheel -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    
+    # Install Minikube
+    print_step "Installing Minikube"
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    
+    # Install Helm
+    print_step "Installing Helm"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "FreeBSD prerequisites installed"
+}
+
+# OpenBSD specific installation
+install_openbsd_prerequisites() {
+    print_step "Installing prerequisites for OpenBSD"
+    
+    # Update package database
+    $UPDATE_COMMAND
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip
+    
+    # Install kubectl
+    print_step "Installing kubectl"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g wheel -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    
+    # Install Minikube
+    print_step "Installing Minikube"
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    
+    # Install Helm
+    print_step "Installing Helm"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "OpenBSD prerequisites installed"
+}
+
+# Generic installation for unknown distributions
+install_generic_prerequisites() {
+    print_step "Installing prerequisites using generic method"
+    
+    # Try to update system
+    $UPDATE_COMMAND || print_warning "System update failed, continuing..."
+    
+    # Install basic tools
+    $INSTALL_COMMAND curl wget git unzip || print_warning "Some basic tools failed to install"
+    
+    # Install Docker
+    print_step "Installing Docker"
+    $INSTALL_COMMAND docker || print_warning "Docker installation failed"
+    
+    # Start Docker if possible
+    sudo systemctl start docker 2>/dev/null || sudo service docker start 2>/dev/null || print_warning "Could not start Docker"
+    
+    # Install kubectl
+    print_step "Installing kubectl"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    
+    # Install Minikube
+    print_step "Installing Minikube"
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    
+    # Install Helm
+    print_step "Installing Helm"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+    # Install ArgoCD CLI
+    print_step "Installing ArgoCD CLI"
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    chmod +x /usr/local/bin/argocd
+    
+    # Install Velero CLI
+    print_step "Installing Velero CLI"
+    curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+    tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+    sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+    rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
+    
+    print_success "Generic prerequisites installed"
 }
 
 # Function to setup Kubernetes cluster
@@ -715,10 +1075,15 @@ show_help() {
     echo "  $0 status             # Show deployment status"
     echo ""
     echo "Supported Operating Systems:"
-    echo "  - Ubuntu/Debian"
-    echo "  - RHEL/CentOS/Fedora/Amazon Linux"
+    echo "  - Ubuntu/Debian/Linux Mint/Pop!_OS/Elementary OS"
+    echo "  - RHEL/CentOS/Fedora/Amazon Linux/Rocky Linux/AlmaLinux"
+    echo "  - Arch Linux/Manjaro/EndeavourOS"
+    echo "  - SUSE Linux/OpenSUSE/SLES"
+    echo "  - Alpine Linux"
+    echo "  - FreeBSD/OpenBSD"
     echo "  - macOS"
     echo "  - Windows (with WSL2 or PowerShell)"
+    echo "  - Any Linux distribution (generic detection)"
     echo ""
     echo "For more information, see README.md"
 }
