@@ -448,15 +448,23 @@ setup_kubernetes_cluster() {
 setup_linux_kubernetes() {
     print_step "Starting Minikube cluster"
     
+    # Clean up any existing Minikube cluster
+    print_step "Cleaning up any existing Minikube cluster..."
+    minikube delete --all --purge 2>/dev/null || true
+    
     # Check if running as root and handle accordingly
     if [[ $EUID -eq 0 ]]; then
-        print_warning "Running as root detected. Using --force flag for Minikube"
-        # Start Minikube with force flag for root user
-        minikube start --memory=8192 --cpus=4 --driver=docker --force
+        print_warning "Running as root detected. Using --driver=none for better compatibility"
+        # For root users, use none driver which is more reliable on EC2
+        minikube start --memory=8192 --cpus=4 --driver=none --force
     else
         # Start Minikube normally for non-root users
         minikube start --memory=8192 --cpus=4 --driver=docker
     fi
+    
+    # Wait for cluster to be ready
+    print_step "Waiting for cluster to be ready..."
+    sleep 30
     
     # Verify cluster is running
     minikube status
