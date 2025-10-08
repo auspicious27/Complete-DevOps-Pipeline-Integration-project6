@@ -448,8 +448,15 @@ setup_kubernetes_cluster() {
 setup_linux_kubernetes() {
     print_step "Starting Minikube cluster"
     
-    # Start Minikube with appropriate resources
-    minikube start --memory=8192 --cpus=4 --driver=docker
+    # Check if running as root and handle accordingly
+    if [[ $EUID -eq 0 ]]; then
+        print_warning "Running as root detected. Using --force flag for Minikube"
+        # Start Minikube with force flag for root user
+        minikube start --memory=8192 --cpus=4 --driver=docker --force
+    else
+        # Start Minikube normally for non-root users
+        minikube start --memory=8192 --cpus=4 --driver=docker
+    fi
     
     # Verify cluster is running
     minikube status
