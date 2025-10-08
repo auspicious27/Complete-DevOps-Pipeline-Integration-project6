@@ -256,8 +256,32 @@ install_rhel_prerequisites() {
     # Update packages
     $UPDATE_COMMAND
     
-    # Install basic tools
-    $INSTALL_COMMAND curl wget git unzip
+    # Install basic tools (handle curl conflict on Amazon Linux)
+    if [[ "$OS_DISTRO" == "amzn" ]]; then
+        print_step "Installing basic tools for Amazon Linux (handling curl conflict)"
+        $INSTALL_COMMAND wget git unzip --allowerasing || {
+            print_warning "Some packages failed to install, trying alternative approach"
+            $INSTALL_COMMAND wget git unzip --skip-broken
+        }
+        
+        # Check if curl is already available
+        if ! command -v curl &> /dev/null; then
+            print_step "Installing curl (replacing curl-minimal)"
+            $INSTALL_COMMAND curl --allowerasing || {
+                print_warning "curl installation failed, trying alternative approach"
+                $INSTALL_COMMAND curl --skip-broken || {
+                    print_error "curl installation failed. Please run manually:"
+                    echo "sudo dnf install curl --allowerasing"
+                    echo "Or use the existing curl-minimal package"
+                    return 1
+                }
+            }
+        else
+            print_status "curl is already available"
+        fi
+    else
+        $INSTALL_COMMAND curl wget git unzip
+    fi
     
     # Install Docker
     print_step "Installing Docker"
