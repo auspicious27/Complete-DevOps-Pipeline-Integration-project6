@@ -9,7 +9,6 @@ namespace: sample-app-prod
 resources:
 - ../../applications/sample-app
 - deployment-patch.yaml
-- service-patch.yaml
 - hpa.yaml
 - pdb.yaml
 
@@ -19,7 +18,6 @@ commonLabels:
 
 patchesStrategicMerge:
 - deployment-patch.yaml
-- service-patch.yaml
 
 images:
 - name: nginx

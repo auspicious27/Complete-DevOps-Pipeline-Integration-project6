@@ -1,0 +1,20 @@
+# Sample Application Service
+# Exposes the sample web application
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-web-app-service
+  namespace: sample-app
+  labels:
+    app: sample-web-app
+    version: v1.0.0
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: sample-web-app

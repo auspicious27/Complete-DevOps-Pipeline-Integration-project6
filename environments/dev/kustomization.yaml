@@ -9,7 +9,6 @@ namespace: sample-app-dev
 resources:
 - ../../applications/sample-app
 - deployment-patch.yaml
-- service-patch.yaml
 
 commonLabels:
   environment: development
@@ -17,7 +16,6 @@ commonLabels:
 
 patchesStrategicMerge:
 - deployment-patch.yaml
-- service-patch.yaml
 
 images:
 - name: nginx
