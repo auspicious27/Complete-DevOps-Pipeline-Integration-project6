@@ -159,14 +159,21 @@ deploy_monitoring() {
 deploy_velero() {
     print_header "Deploying Velero (Backup & DR)"
     
-    print_step "Installing Velero"
+    print_step "Installing Velero CRDs first"
     kubectl apply -f "$SCRIPT_DIR/backup/velero-install.yaml"
+    
+    print_step "Waiting for CRDs to be established"
+    kubectl wait --for condition=established --timeout=60s crd/backups.velero.io || print_warning "Backup CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io || print_warning "BackupStorageLocation CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io || print_warning "VolumeSnapshotLocation CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/restores.velero.io || print_warning "Restore CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/schedules.velero.io || print_warning "Schedule CRD wait failed, continuing..."
     
     print_step "Installing backup schedules"
     kubectl apply -f "$SCRIPT_DIR/backup/backup-schedule.yaml"
     
     print_step "Waiting for Velero to be ready"
-    kubectl wait --for=condition=available --timeout=300s deployment/velero -n velero || print_warning "Velero deployment wait failed, continuing..."
+    kubectl wait --for=condition=available --timeout=600s deployment/velero -n velero || print_warning "Velero deployment wait failed, continuing..."
     
     print_success "Velero deployed successfully"
 }
