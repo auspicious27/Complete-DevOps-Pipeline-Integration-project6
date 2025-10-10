@@ -23,32 +23,6 @@ spec:
     storageLocation: default
     volumeSnapshotLocations:
     - default
-    metadata:
-      labels:
-        environment: production
-        backup-type: daily
-    hooks:
-      resources:
-      - name: pre-backup-hook
-        includedNamespaces:
-        - sample-app-prod
-        labelSelector:
-          matchLabels:
-            app: sample-web-app
-        pre:
-        - exec:
-            container: web-app
-            command:
-            - /bin/sh
-            - -c
-            - "echo 'Pre-backup hook: Flushing caches and preparing for backup'"
-        post:
-        - exec:
-            container: web-app
-            command:
-            - /bin/sh
-            - -c
-            - "echo 'Post-backup hook: Backup completed successfully'"
 
 ---
 # Weekly backup schedule for staging
@@ -71,10 +45,6 @@ spec:
     storageLocation: default
     volumeSnapshotLocations:
     - default
-    metadata:
-      labels:
-        environment: staging
-        backup-type: weekly
 
 ---
 # Monthly backup schedule for development
@@ -97,10 +67,6 @@ spec:
     storageLocation: default
     volumeSnapshotLocations:
     - default
-    metadata:
-      labels:
-        environment: development
-        backup-type: monthly
 
 ---
 # Disaster Recovery Backup (complete cluster backup)
@@ -122,7 +88,3 @@ spec:
     storageLocation: default
     volumeSnapshotLocations:
     - default
-    metadata:
-      labels:
-        backup-type: disaster-recovery
-        critical: "true"
