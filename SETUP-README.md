@@ -717,42 +717,45 @@ Next Steps
 
 ### **final-setup.sh** - Complete DevOps Pipeline Setup
 ```bash
-./final-setup.sh                    # Complete setup (default)
+./final-setup.sh                    # Complete setup (works on all OS)
 ```
 
 **The script automatically:**
-- Detects your operating system (Linux, macOS, Windows)
-- Installs all prerequisites (Docker, kubectl, Minikube, Helm, etc.)
-- Sets up Kubernetes cluster with Minikube
-- Deploys complete DevOps pipeline (ArgoCD, Jenkins, SonarQube, Prometheus, Grafana, Velero)
+- Detects your operating system
+- Installs all required tools with fallback methods
+- Sets up Kubernetes cluster
+- Deploys the complete DevOps pipeline
 - Shows access URLs and passwords
-
-### **Key Features:**
-- **OS Auto-Detection**: Works on Linux, macOS, Windows
-- **Package Manager Support**: apt, yum, dnf, pacman, brew, choco
-- **Fallback Methods**: curl → wget → package manager
-- **Error Handling**: Continues even if some components fail
-- **Root User Support**: Handles root user scenarios
-- **Minikube Drivers**: Supports docker and none drivers
 
 ## 🎯 Operating System Support
 
-### ✅ **Linux (Ubuntu/Debian/CentOS/RHEL/Amazon Linux/Fedora/Arch Linux)**
+### ✅ **Linux (Ubuntu/Debian)**
 ```bash
-# final-setup.sh automatically detects and installs:
-- Package manager (apt/yum/dnf/pacman)
-- Docker/Docker CE
+# The script automatically detects and installs:
+- Docker CE
 - kubectl
-- Minikube (with fallback methods)
+- Minikube
 - Helm
 - ArgoCD CLI
 - Velero CLI
-- All dependencies with conflict resolution
+- All dependencies
 ```
 
-### ✅ **macOS (Intel and Apple Silicon)**
+### ✅ **RHEL/CentOS/Fedora/Amazon Linux**
 ```bash
-# final-setup.sh automatically detects and installs:
+# The script automatically detects and installs:
+- Docker
+- kubectl
+- Minikube
+- Helm
+- ArgoCD CLI
+- Velero CLI
+- All dependencies
+```
+
+### ✅ **macOS**
+```bash
+# The script automatically detects and installs:
 - Homebrew (if not installed)
 - Docker Desktop
 - kubectl
@@ -763,10 +766,10 @@ Next Steps
 - All dependencies
 ```
 
-### ✅ **Windows (WSL2/PowerShell)**
+### ✅ **Windows**
 ```bash
-# final-setup.sh provides PowerShell commands for:
-- Chocolatey installation
+# The script automatically detects and installs:
+- Chocolatey (if not installed)
 - Docker Desktop
 - kubectl
 - Minikube
@@ -1156,17 +1159,12 @@ After setup, you can access all tools:
 
 ### **Setup Commands**
 ```bash
-./smart-setup.sh                    # Complete setup
-./smart-setup.sh install            # Install prerequisites only
-./smart-setup.sh cluster            # Setup Kubernetes only
-./smart-setup.sh deploy             # Deploy pipeline only
-./smart-setup.sh verify             # Verify installation
-./smart-setup.sh status             # Show status
+./final-setup.sh                    # Complete setup (works on all OS)
 ```
 
 ### **Setup Status Output Example**
 ```bash
-$ ./smart-setup.sh status
+$ kubectl get pods --all-namespaces
 
 ================================
 Deployment Status
@@ -1329,20 +1327,18 @@ kubectl get pods -n velero
 cat setup.log
 
 # Verify prerequisites
-./smart-setup.sh verify
+kubectl get nodes
 
-# Try individual steps
-./smart-setup.sh install
-./smart-setup.sh cluster
-./smart-setup.sh deploy
+# Check deployment status
+kubectl get pods --all-namespaces
 ```
 
 **Example Error Output:**
 ```bash
-$ ./smart-setup.sh
+$ ./final-setup.sh
 
 ================================
-Smart DevOps Pipeline Setup
+Final DevOps Pipeline Setup
 ================================
 [INFO] Starting automated setup for darwin (macos)
 
@@ -1577,7 +1573,7 @@ The Smart DevOps Pipeline Setup provides:
 
 **Start your DevOps journey today with just one command:**
 ```bash
-./smart-setup.sh
+./final-setup.sh
 ```
 
 ---
