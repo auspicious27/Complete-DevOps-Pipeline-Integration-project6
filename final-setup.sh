@@ -144,9 +144,28 @@ install_linux_prerequisites() {
         INSTALL_CMD="echo 'Please install packages manually'"
     fi
     
-    # Install basic tools
+    # Install basic tools (handle curl conflict on Amazon Linux)
     print_step "Installing basic tools"
-    $INSTALL_CMD curl wget git unzip conntrack-tools socat || true
+    if [[ "$OS_DISTRO" == "amzn" ]]; then
+        print_step "Handling curl conflict on Amazon Linux"
+        $INSTALL_CMD wget git unzip conntrack-tools socat --allowerasing || {
+            print_warning "Some packages failed to install, trying alternative approach"
+            $INSTALL_CMD wget git unzip conntrack-tools socat --skip-broken
+        }
+        
+        # Check if curl is already available
+        if ! command -v curl &> /dev/null; then
+            print_step "Installing curl (replacing curl-minimal)"
+            $INSTALL_CMD curl --allowerasing || {
+                print_warning "curl installation failed, trying alternative approach"
+                $INSTALL_CMD curl --skip-broken
+            }
+        else
+            print_status "curl is already available"
+        fi
+    else
+        $INSTALL_CMD curl wget git unzip conntrack-tools socat || true
+    fi
     
     # Install Docker
     print_step "Installing Docker"
@@ -279,19 +298,27 @@ setup_linux_kubernetes() {
     # Start Minikube with fallback methods
     print_step "Starting Minikube"
     if ! minikube status &> /dev/null; then
+        # Check if minikube cluster exists and delete if driver mismatch
+        if minikube profile list &> /dev/null; then
+            print_step "Cleaning up existing minikube cluster"
+            minikube delete || true
+        fi
+        
         # Try different drivers
         if [[ "$EUID" -eq 0 ]]; then
             # Running as root
-            if minikube start --driver=none --force; then
-                print_success "Minikube started with none driver"
-            elif minikube start --driver=docker --force; then
+            print_step "Starting Minikube as root user"
+            if minikube start --driver=docker --force; then
                 print_success "Minikube started with docker driver"
+            elif minikube start --driver=none --force; then
+                print_success "Minikube started with none driver"
             else
                 print_warning "Minikube start failed, trying with reduced resources"
                 minikube start --driver=docker --force --memory=2048 --cpus=2 || print_error "Minikube start failed"
             fi
         else
             # Running as regular user
+            print_step "Starting Minikube as regular user"
             if minikube start --driver=docker; then
                 print_success "Minikube started with docker driver"
             elif minikube start --driver=none; then
@@ -364,15 +391,18 @@ deploy_pipeline() {
     # Deploy Jenkins
     print_step "Deploying Jenkins"
     kubectl create namespace jenkins || true
-    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/crds/jenkins.io_jenkins_crd.yaml
-    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/all-in-one-v1alpha2.yaml
+    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/crds/jenkins.io_jenkins_crd.yaml || print_warning "Jenkins CRD failed"
+    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/all-in-one-v1alpha2.yaml || print_warning "Jenkins operator failed"
     kubectl wait --for=condition=available --timeout=600s deployment/jenkins-operator -n jenkins || print_warning "Jenkins deployment timeout"
     
     # Deploy SonarQube
     print_step "Deploying SonarQube"
     kubectl create namespace sonarqube || true
-    kubectl apply -f https://raw.githubusercontent.com/SonarSource/helm-chart-sonarqube/master/charts/sonarqube/templates/deployment.yaml
-    kubectl wait --for=condition=available --timeout=600s deployment/sonarqube -n sonarqube || print_warning "SonarQube deployment timeout"
+    # Use Helm for SonarQube instead of direct YAML
+    helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || print_warning "SonarQube Helm repo failed"
+    helm repo update || print_warning "Helm repo update failed"
+    helm install sonarqube sonarqube/sonarqube --namespace sonarqube --set service.type=NodePort || print_warning "SonarQube Helm install failed"
+    kubectl wait --for=condition=available --timeout=600s deployment/sonarqube-sonarqube -n sonarqube || print_warning "SonarQube deployment timeout"
     
     # Deploy Prometheus and Grafana
     print_step "Deploying Prometheus and Grafana"
@@ -408,7 +438,7 @@ show_access_info() {
     echo "  URL: http://$(minikube ip):$(kubectl get svc jenkins-operator-http -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')"
     
     echo -e "${CYAN}🔗 SonarQube:${NC}"
-    echo "  URL: http://$(minikube ip):$(kubectl get svc sonarqube -n sonarqube -o jsonpath='{.spec.ports[0].nodePort}')"
+    echo "  URL: http://$(minikube ip):$(kubectl get svc sonarqube-sonarqube -n sonarqube -o jsonpath='{.spec.ports[0].nodePort}')"
     
     echo -e "${CYAN}🔗 Grafana:${NC}"
     echo "  URL: http://$(minikube ip):$(kubectl get svc prometheus-grafana -n monitoring -o jsonpath='{.spec.ports[0].nodePort}')"
