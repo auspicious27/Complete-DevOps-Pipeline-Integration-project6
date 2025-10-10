@@ -33,6 +33,15 @@ chmod +x *.sh
 - Deploy the complete DevOps pipeline
 - Show you access URLs and passwords
 
+### Step 3: Fix Velero Issues (If Needed)
+```bash
+# If you see Velero CRD errors, run:
+./fix-velero.sh
+
+# This fixes the common error:
+# "no matches for kind BackupStorageLocation in version velero.io/v1"
+```
+
 ### 📋 **Complete Output Example**
 ```bash
 $ ./smart-setup.sh
@@ -481,19 +490,28 @@ error: timed out waiting for the condition on deployments/grafana
 ================================
 Deploying Velero (Backup & DR)
 ================================
-[STEP] Installing Velero
+[STEP] Installing Velero CRDs first
+customresourcedefinition.apiextensions.k8s.io/backups.velero.io created
+customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io created
+customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io created
+customresourcedefinition.apiextensions.k8s.io/restores.velero.io created
+customresourcedefinition.apiextensions.k8s.io/schedules.velero.io created
+[STEP] Waiting for CRDs to be established
+customresourcedefinition.apiextensions.k8s.io/backups.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/restores.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/schedules.velero.io condition met
 namespace/velero configured
 deployment.apps/velero created
 service/velero created
 serviceaccount/velero created
 clusterrole.rbac.authorization.k8s.io/velero created
 clusterrolebinding.rbac.authorization.k8s.io/velero created
-resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "BackupStorageLocation" in version "velero.io/v1"
-ensure CRDs are installed first
-resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "VolumeSnapshotLocation" in version "velero.io/v1"
-ensure CRDs are installed first
+secret/cloud-credentials created
 [STEP] Installing backup schedules
 [STEP] Waiting for Velero to be ready
+deployment.apps/velero condition met
 [SUCCESS] Velero deployed successfully
 
 ================================
@@ -1284,7 +1302,26 @@ kubectl rollout restart deployment/sample-web-app -n sample-app-prod
 
 ## 🎯 Troubleshooting
 
-### **Issue 1: Setup Fails**
+### **Issue 1: Velero CRD Errors**
+```bash
+# Error: "no matches for kind BackupStorageLocation in version velero.io/v1"
+# Error: "ensure CRDs are installed first"
+
+# Quick Fix:
+./fix-velero.sh
+
+# Manual Fix:
+kubectl apply -f backup/velero-install.yaml
+kubectl wait --for condition=established --timeout=60s crd/backups.velero.io
+kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io
+kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io
+
+# Verify Fix:
+kubectl get crd | grep velero
+kubectl get pods -n velero
+```
+
+### **Issue 2: Setup Fails**
 ```bash
 # Check logs
 cat setup.log

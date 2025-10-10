@@ -723,19 +723,28 @@ error: timed out waiting for the condition on deployments/grafana
 ================================
 Deploying Velero (Backup & DR)
 ================================
-[STEP] Installing Velero
+[STEP] Installing Velero CRDs first
+customresourcedefinition.apiextensions.k8s.io/backups.velero.io created
+customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io created
+customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io created
+customresourcedefinition.apiextensions.k8s.io/restores.velero.io created
+customresourcedefinition.apiextensions.k8s.io/schedules.velero.io created
+[STEP] Waiting for CRDs to be established
+customresourcedefinition.apiextensions.k8s.io/backups.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/restores.velero.io condition met
+customresourcedefinition.apiextensions.k8s.io/schedules.velero.io condition met
 namespace/velero configured
 deployment.apps/velero created
 service/velero created
 serviceaccount/velero created
 clusterrole.rbac.authorization.k8s.io/velero created
 clusterrolebinding.rbac.authorization.k8s.io/velero created
-resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "BackupStorageLocation" in version "velero.io/v1"
-ensure CRDs are installed first
-resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "VolumeSnapshotLocation" in version "velero.io/v1"
-ensure CRDs are installed first
+secret/cloud-credentials created
 [STEP] Installing backup schedules
 [STEP] Waiting for Velero to be ready
+deployment.apps/velero condition met
 [SUCCESS] Velero deployed successfully
 
 ================================
@@ -1575,6 +1584,31 @@ kubectl get pv,pvc --all-namespaces
 
 # Check secrets
 kubectl get secrets --all-namespaces
+```
+
+### Velero Troubleshooting
+```bash
+# Fix Velero CRD issues
+./fix-velero.sh
+
+# Check Velero CRDs
+kubectl get crd | grep velero
+
+# Check Velero pods
+kubectl get pods -n velero
+
+# Check Velero logs
+kubectl logs -n velero deployment/velero
+
+# Verify Velero installation
+kubectl get all -n velero
+
+# Common Velero errors and fixes:
+# Error: "no matches for kind BackupStorageLocation"
+# Fix: Run ./fix-velero.sh
+
+# Error: "ensure CRDs are installed first"
+# Fix: kubectl apply -f backup/velero-install.yaml
 ```
 
 ### Cleanup Commands
