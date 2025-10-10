@@ -1,8 +1,0 @@
-Wed Oct  8 20:53:11 IST 2025: [OS-INFO] Detected: macOS
-Wed Oct  8 20:53:11 IST 2025: [SUCCESS] OS Detection completed: macos (macos)
-Wed Oct  8 20:53:11 IST 2025: [INFO] Available RAM: 8GB
-Wed Oct  8 20:53:11 IST 2025: [INFO] Available disk space: 8.7Gi
-Wed Oct  8 20:53:11 IST 2025: [INFO] CPU cores: 8
-Wed Oct  8 20:53:11 IST 2025: [SUCCESS] System requirements check completed
-Wed Oct  8 20:53:11 IST 2025: [STEP] Installing prerequisites for macOS
-Wed Oct  8 20:53:35 IST 2025: [STEP] Installing Docker Desktop

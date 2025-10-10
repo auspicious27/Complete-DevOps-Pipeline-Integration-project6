@@ -1,343 +1,119 @@
-# 🚀 Smart DevOps Pipeline Setup Guide
+# 🚀 Complete DevOps Pipeline Setup Guide
 
-## 🎯 What This Guide Does
+## 📋 Table of Contents
+1. [System Requirements](#system-requirements)
+2. [OS Detection & Installation](#os-detection--installation)
+3. [Quick Setup (2 Minutes)](#quick-setup-2-minutes)
+4. [Step-by-Step Detailed Setup](#step-by-step-detailed-setup)
+5. [Expected Outputs](#expected-outputs)
+6. [Troubleshooting](#troubleshooting)
+7. [AWS Instance Setup](#aws-instance-setup)
+8. [Verification & Testing](#verification--testing)
 
-This guide helps you set up a complete DevOps pipeline **automatically** on any operating system. The smart scripts will:
+---
 
-- ✅ **Detect your OS** (Linux, Ubuntu, Windows, Mac)
-- ✅ **Install everything needed** (Docker, Kubernetes, tools)
-- ✅ **Set up the complete pipeline** (ArgoCD, Jenkins, monitoring, etc.)
-- ✅ **Deploy applications intelligently** (auto-detect environment and strategy)
+## 🖥️ System Requirements
 
-## 🎯 Quick Start (2 Minutes)
+### Minimum Requirements
+- **RAM**: 8GB (Recommended: 16GB)
+- **CPU**: 4 cores (Recommended: 8 cores)
+- **Storage**: 50GB free space
+- **Internet**: Stable connection
+- **OS**: Linux, macOS, Windows, or AWS EC2
 
-### Step 1: Download the Project
+### Supported Operating Systems
+- ✅ **Linux**: Ubuntu 18.04+, Debian 10+, CentOS 7+, RHEL 8+, Amazon Linux 2023
+- ✅ **macOS**: Intel Macs and Apple Silicon (M1/M2)
+- ✅ **Windows**: Windows 10/11 with WSL2 or PowerShell
+- ✅ **AWS EC2**: All instance types (t2.micro to c5.4xlarge)
+
+---
+
+## 🔍 OS Detection & Installation
+
+### Automatic OS Detection Script
 ```bash
-git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
-cd Complete-DevOps-Pipeline-Integration-project6
+#!/bin/bash
+# OS Detection Script
+
+detect_os() {
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            OS=$ID
+            VERSION=$VERSION_ID
+        elif [ -f /etc/redhat-release ]; then
+            OS="rhel"
+            VERSION=$(cat /etc/redhat-release | grep -oE '[0-9]+' | head -1)
+        elif [ -f /etc/debian_version ]; then
+            OS="debian"
+            VERSION=$(cat /etc/debian_version)
+        else
+            OS="linux"
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        OS="macos"
+        VERSION=$(sw_vers -productVersion)
+    elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+        OS="windows"
+    else
+        OS="unknown"
+    fi
+    
+    echo "Detected OS: $OS $VERSION"
+}
+
+# Detect AWS Instance
+detect_aws() {
+    if curl -s --max-time 2 http://169.254.169.254/latest/meta-data/instance-id > /dev/null 2>&1; then
+        echo "AWS EC2 Instance Detected"
+        INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
+        echo "Instance Type: $INSTANCE_TYPE"
+        return 0
+    else
+        return 1
+    fi
+}
+
+detect_os
+detect_aws
 ```
 
-### Step 2: Run Final Setup
+### Expected Output:
 ```bash
-# Make script executable
-chmod +x final-setup.sh
+Detected OS: ubuntu 22.04
+AWS EC2 Instance Detected
+Instance Type: t3.medium
+```
 
-# Run the final setup (works on all OS)
+---
+
+## ⚡ Quick Setup (2 Minutes)
+
+### One-Command Setup
+```bash
+# Clone the repository
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+
+# Make scripts executable
+chmod +x *.sh
+chmod +x */*.sh
+
+# Run automatic setup
 ./final-setup.sh
 ```
 
-**That's it!** The script will:
-- Auto-detect your operating system
-- Install all required tools with fallback methods
-- Set up Kubernetes cluster
-- Deploy the complete DevOps pipeline
-- Show you access URLs and passwords
-
-### Supported Operating Systems
-- **Linux**: Ubuntu, Debian, CentOS, RHEL, Amazon Linux, Fedora, Arch Linux
-- **macOS**: Intel Macs and Apple Silicon (M1/M2)
-- **Windows**: WSL2, PowerShell with Chocolatey
-
-### Package Managers Supported
-- **Linux**: apt, yum, dnf, pacman
-- **macOS**: Homebrew
-- **Windows**: Chocolatey
-
-### 📋 **Complete Output Example**
-```bash
-$ ./final-setup.sh
-
+### Expected Output:
+```
 ================================
-Final DevOps Pipeline Setup
+Complete DevOps Pipeline Integration Deployment
 ================================
-[INFO] Starting automated setup for linux (amzn)
-
+[SUCCESS] Prerequisites check passed
+[INFO] Detected OS: ubuntu 22.04
+[INFO] AWS EC2 Instance Detected: t3.medium
 ================================
-Detecting Operating System
-================================
-[OS-INFO] Detected: Linux
-[OS-INFO] Distribution: Amazon Linux 2023.9.20250929
-[SUCCESS] OS Detection completed: linux (amzn)
-
-================================
-Checking System Requirements
-================================
-[INFO] Available RAM: 15GB
-[INFO] Available disk space: 6.3G
-[INFO] CPU cores: 4
-[SUCCESS] System requirements check completed
-
-================================
-Installing Prerequisites
-================================
-[STEP] Installing prerequisites for RHEL/CentOS/Fedora/Amazon Linux
-Last metadata expiration check: 0:00:30 ago on Fri Oct 10 09:40:57 2025.
-Dependencies resolved.
-Nothing to do.
-Complete!
-[STEP] Installing basic tools for Amazon Linux (handling curl conflict)
-Last metadata expiration check: 0:00:30 ago on Fri Oct 10 09:40:57 2025.
-Package wget-1.21.3-1.amzn2023.0.4.x86_64 is already installed.
-Package git-2.50.1-1.amzn2023.0.1.x86_64 is already installed.
-Package unzip-6.0-57.amzn2023.0.2.x86_64 is already installed.
-Dependencies resolved.
-Nothing to do.
-Complete!
-[INFO] curl is already available
-[STEP] Installing additional packages for Minikube none driver
-Last metadata expiration check: 0:00:31 ago on Fri Oct 10 09:40:57 2025.
-Dependencies resolved.
-================================================================================
- Package                  Arch     Version                  Repository     Size
-================================================================================
-Installing:
- conntrack-tools          x86_64   1.4.6-2.amzn2023.0.2     amazonlinux   208 k
- socat                    x86_64   1.7.4.2-1.amzn2023.0.2   amazonlinux   303 k
-Installing dependencies:
- libnetfilter_conntrack   x86_64   1.0.8-2.amzn2023.0.2     amazonlinux    58 k
- libnetfilter_cthelper    x86_64   1.0.0-21.amzn2023.0.2    amazonlinux    24 k
- libnetfilter_cttimeout   x86_64   1.0.0-19.amzn2023.0.2    amazonlinux    24 k
- libnetfilter_queue       x86_64   1.0.5-2.amzn2023.0.2     amazonlinux    30 k
- libnfnetlink             x86_64   1.0.1-19.amzn2023.0.2    amazonlinux    30 k
-
-Transaction Summary
-================================================================================
-Install  7 Packages
-
-Total download size: 675 k
-Installed size: 2.1 M
-Downloading Packages:
-(1/7): libnetfilter_conntrack-1.0.8-2.amzn2023. 1.6 MB/s |  58 kB     00:00    
-(2/7): libnetfilter_cthelper-1.0.0-21.amzn2023. 639 kB/s |  24 kB     00:00    
-(3/7): conntrack-tools-1.4.6-2.amzn2023.0.2.x86 5.0 MB/s | 208 kB     00:00    
-(4/7): libnetfilter_cttimeout-1.0.0-19.amzn2023 1.1 MB/s |  24 kB     00:00    
-(5/7): libnfnetlink-1.0.1-19.amzn2023.0.2.x86_6 1.5 MB/s |  30 kB     00:00    
-(6/7): libnetfilter_queue-1.0.5-2.amzn2023.0.2. 1.1 MB/s |  30 kB     00:00    
-(7/7): socat-1.7.4.2-1.amzn2023.0.2.x86_64.rpm  5.1 MB/s | 303 kB     00:00    
---------------------------------------------------------------------------------
-Total                                           4.6 MB/s | 675 kB     00:00     
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Installing       : libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64              1/7 
-  Installing       : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64     2/7 
-  Installing       : libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64         3/7 
-  Installing       : libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64    4/7 
-  Installing       : libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64     5/7 
-  Installing       : conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            6/7 
-  Running scriptlet: conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            6/7 
-  Installing       : socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
-  Running scriptlet: socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
-  Verifying        : conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            1/7 
-  Verifying        : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64     2/7 
-  Verifying        : libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64     3/7 
-  Verifying        : libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64    4/7 
-  Verifying        : libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64         5/7 
-  Verifying        : libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64              6/7 
-  Verifying        : socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
-
-Installed:
-  conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64                                   
-  libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64                            
-  libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64                            
-  libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64                           
-  libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64                                 
-  libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64                                     
-  socat-1.7.4.2-1.amzn2023.0.2.x86_64                                           
-
-Complete!
-[STEP] Installing Docker
-Last metadata expiration check: 0:00:33 ago on Fri Oct 10 09:40:57 2025.
-Dependencies resolved.
-================================================================================
- Package              Arch      Version                    Repository      Size
-================================================================================
-Installing:
- docker               x86_64    25.0.8-1.amzn2023.0.6      amazonlinux     46 M
-Installing dependencies:
- container-selinux    noarch    4:2.242.0-1.amzn2023       amazonlinux     58 k
- containerd           x86_64    2.0.6-1.amzn2023.0.1       amazonlinux     26 M
- iptables-libs        x86_64    1.8.8-3.amzn2023.0.2       amazonlinux    401 k
- iptables-nft         x86_64    1.8.8-3.amzn2023.0.2       amazonlinux    183 k
- libcgroup            x86_64    3.0-1.amzn2023.0.1         amazonlinux     75 k
- libnftnl             x86_64    1.2.2-2.amzn2023.0.2       amazonlinux     84 k
- pigz                 x86_64    2.5-1.amzn2023.0.3         amazonlinux     83 k
- runc                 x86_64    1.2.6-1.amzn2023.0.1       amazonlinux    3.7 M
-
-Transaction Summary
-================================================================================
-Install  9 Packages
-
-Total download size: 77 M
-Installed size: 292 M
-Downloading Packages:
-(1/9): container-selinux-2.242.0-1.amzn2023.noa 1.7 MB/s |  58 kB     00:00    
-(2/9): iptables-libs-1.8.8-3.amzn2023.0.2.x86_6 8.2 MB/s | 401 kB     00:00    
-(3/9): iptables-nft-1.8.8-3.amzn2023.0.2.x86_64 7.4 MB/s | 183 kB     00:00    
-(4/9): libcgroup-3.0-1.amzn2023.0.3.x86_64.rpm  2.3 MB/s |  75 kB     00:00    
-(5/9): libnftnl-1.2.2-2.amzn2023.0.2.x86_64.rpm 1.6 MB/s |  84 kB     00:00    
-(6/9): pigz-2.5-1.amzn2023.0.3.x86_64.rpm       2.5 MB/s |  83 kB     00:00    
-(7/9): runc-1.2.6-1.amzn2023.0.1.x86_64.rpm      17 MB/s | 3.7 MB     00:00    
-(8/9): containerd-2.0.6-1.amzn2023.0.1.x86_64.r  39 MB/s |  26 MB     00:00    
-(9/9): docker-25.0.8-1.amzn2023.0.6.x86_64.rpm   39 MB/s |  46 MB     00:01    
---------------------------------------------------------------------------------
-Total                                            64 MB/s |  77 MB     00:01     
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Installing       : runc-1.2.6-1.amzn2023.0.1.x86_64                       1/9 
-  Installing       : containerd-2.0.6-1.amzn2023.0.1.x86_64                 2/9 
-  Running scriptlet: containerd-2.0.6-1.amzn2023.0.1.x86_64                 2/9 
-  Installing       : pigz-2.5-1.amzn2023.0.3.x86_64                         3/9 
-  Installing       : libnftnl-1.2.2-2.amzn2023.0.2.x86_64                   4/9 
-  Installing       : libcgroup-3.0-1.amzn2023.0.1.x86_64                    5/9 
-  Installing       : iptables-libs-1.8.8-3.amzn2023.0.2.x86_64              6/9 
-  Installing       : iptables-nft-1.8.8-3.amzn2023.0.2.x86_64               7/9 
-  Running scriptlet: iptables-nft-1.8.8-3.amzn2023.0.2.x86_64               7/9 
-  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
-  Installing       : container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
-  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
-  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
-  Installing       : docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
-  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
-Created symlink /etc/systemd/system/sockets.target.wants/docker.socket → /usr/lib/systemd/system/docker.socket.
-
-  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          9/9 
-  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                                                           9/9 
-  Verifying        : container-selinux-4:2.242.0-1.amzn2023.noarch                                                 1/9 
-  Verifying        : containerd-2.0.6-1.amzn2023.0.1.x86_64                                                        2/9 
-  Verifying        : docker-25.0.8-1.amzn2023.0.6.x86_64                                                           3/9 
-  Verifying        : iptables-libs-1.8.8-3.amzn2023.0.2.x86_64                                                     4/9 
-  Verifying        : iptables-nft-1.8.8-3.amzn2023.0.2.x86_64                                                      5/9 
-  Verifying        : libcgroup-3.0-1.amzn2023.0.1.x86_64                                                           6/9 
-  Verifying        : libnftnl-1.2.2-2.amzn2023.0.2.x86_64                                                          7/9 
-  Verifying        : pigz-2.5-1.amzn2023.0.3.x86_64                                                                8/9 
-  Verifying        : runc-1.2.6-1.amzn2023.0.1.x86_64                                                              9/9 
-
-Installed:
-  container-selinux-4:2.242.0-1.amzn2023.noarch                containerd-2.0.6-1.amzn2023.0.1.x86_64                  
-  docker-25.0.8-1.amzn2023.0.6.x86_64                          iptables-libs-1.8.8-3.amzn2023.0.2.x86_64               
-  iptables-nft-1.8.8-3.amzn2023.0.2.x86_64                     libcgroup-3.0-1.amzn2023.0.1.x86_64                     
-  libnftnl-1.2.2-2.amzn2023.0.2.x86_64                         pigz-2.5-1.amzn2023.0.3.x86_64                          
-  runc-1.2.6-1.amzn2023.0.1.x86_64                            
-
-Complete!
-Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service.
-[STEP] Installing kubectl
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   138  100   138    0     0    478      0 --:--:-- --:--:-- --:--:--   477
-100 57.7M  100 57.7M    0     0  71.9M      0 --:--:-- --:--:-- --:--:-- 71.9M
-[STEP] Installing Minikube
-[SUCCESS] Minikube installed successfully
-[STEP] Installing Helm
-  % Total    % Received % Xferd  Average Speed   Time    Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 11913  100 11913    0     0   842k      0 --:--:-- --:--:-- --:--:--  894k
-Downloading https://get.helm.sh/helm-v3.19.0-linux-amd64.tar.gz
-Verifying checksum... Done.
-Preparing to install helm into /usr/local/bin
-helm installed into /usr/local/bin/helm
-[STEP] Installing ArgoCD CLI
-[STEP] Installing Velero CLI
-[SUCCESS] RHEL/CentOS/Fedora/Amazon Linux prerequisites installed
-
-================================
-Setting up Kubernetes Cluster
-================================
-[STEP] Starting Minikube cluster
-[STEP] Cleaning up any existing Minikube cluster...
-* Successfully deleted all profiles
-* Successfully purged minikube directory located at - [/root/.minikube]
-[WARNING] Running as root detected. Trying --driver=none first, then docker as fallback
-😄  minikube v1.37.0 on Amazon 2023.9.20250929 (xen/amd64)
-❗  minikube skips various validations when --force is supplied; this may lead to unexpected behavior
-✨  Using the none driver based on user configuration
-❗  The 'none' driver does not respect the --cpus flag
-❗  The 'none' driver does not respect the --memory flag
-
-❌  Exiting due to GUEST_MISSING_CONNTRACK: Sorry, Kubernetes 1.34.0 requires crictl to be installed in root's path
-
-[WARNING] None driver failed, trying docker driver with --force
-* Removed all traces of the "minikube" cluster.
-* Successfully deleted all profiles
-* Successfully purged minikube directory located at - [/root/.minikube]
-😄  minikube v1.37.0 on Amazon 2023.9.20250929 (xen/amd64)
-❗  minikube skips various validations when --force is supplied; this may lead to unexpected behavior
-✨  Using the docker driver based on user configuration
-🛑  The "docker" driver should not be used with root privileges. If you wish to continue as root, use --force.
-💡  If you are running minikube within a VM, consider using --driver=none:
-📘    https://minikube.sigs.k8s.io/docs/reference/drivers/none/
-📌  Using Docker driver with root privileges
-👍  Starting "minikube" primary control-plane node in "minikube" cluster
-🚜  Pulling base image v0.0.48 ...
-💾  Downloading Kubernetes v1.34.0 preload ...
-    > gcr.io/k8s-minikube/kicbase...:  488.51 MiB / 488.52 MiB  100.00% 21.49 M
-    > preloaded-images-k8s-v18-v1...:  337.07 MiB / 337.07 MiB  100.00% 13.60 M
-🔥  Creating docker container (CPUs=4, Memory=8192MB) ...
-🐳  Preparing Kubernetes v1.34.0 on Docker 28.4.0 ...
-🔗  Configuring bridge CNI (Container Networking Interface) ...
-🔎  Verifying Kubernetes components...
-    ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
-🌟  Enabled addons: storage-provisioner, default-storageclass
-🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
-[STEP] Waiting for cluster to be ready...
-minikube
-type: Control Plane
-host: Running
-kubelet: Running
-apiserver: Running
-kubeconfig: Configured
-
-Kubernetes control plane is running at https://192.168.49.2:8443
-CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-
-To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
-[SUCCESS] Kubernetes cluster setup completed
-
-================================
-Verifying Installation
-================================
-[INFO] ✅ Docker: Docker version 25.0.8, build 0bab007
-[INFO] ✅ kubectl: Installed
-[INFO] ✅ Minikube: v1.37.0
-[INFO] ✅ Helm: v3.19.0+g3d8990f
-[INFO] ✅ ArgoCD CLI: argocd: v3.1.8+becb020
-[INFO] ✅ Velero CLI: Installed
-[INFO] ✅ Git: git version 2.50.1
-[SUCCESS] Installation verification completed
-
-================================
-Deploying DevOps Pipeline
-================================
-[STEP] Making scripts executable
-[STEP] Deploying complete DevOps pipeline
-
-================================
-Final DevOps Pipeline Setup
-================================
-[INFO] Starting automated setup for linux (amzn)
-================================
-Detecting Operating System
-================================
-[OS-INFO] Detected: Linux
-[OS-INFO] Distribution: Amazon Linux 2023.9.20250929
-[SUCCESS] OS Detection completed: linux (amzn)
-================================
-Checking System Requirements
-================================
-[INFO] Available RAM: 15GB
-[INFO] Available disk space: 73M
-[INFO] CPU cores: 4
-[SUCCESS] System requirements check completed
-================================
-Installing Prerequisites
+Creating Namespaces
 ================================
 [STEP] Creating namespace: argocd
 namespace/argocd created
@@ -357,110 +133,25 @@ namespace/velero created
 Deploying ArgoCD (GitOps)
 ================================
 [STEP] Installing ArgoCD
-Warning: unrecognized format "int64"
 customresourcedefinition.apiextensions.k8s.io/applications.argoproj.io created
 customresourcedefinition.apiextensions.k8s.io/applicationsets.argoproj.io created
-customresourcedefinition.apiextensions.k8s.io/appprojects.argoproj.io created
-serviceaccount/argocd-application-controller created
-serviceaccount/argocd-applicationset-controller created
-serviceaccount/argocd-dex-server created
-serviceaccount/argocd-notifications-controller created
-serviceaccount/argocd-redis created
-serviceaccount/argocd-repo-server created
-serviceaccount/argocd-server created
-role.rbac.authorization.k8s.io/argocd-application-controller created
-role.rbac.authorization.k8s.io/argocd-applicationset-controller created
-role.rbac.authorization.k8s.io/argocd-dex-server created
-role.rbac.authorization.k8s.io/argocd-notifications-controller created
-role.rbac.authorization.k8s.io/argocd-redis created
-role.rbac.authorization.k8s.io/argocd-repo-server created
-role.rbac.authorization.k8s.io/argocd-server created
-clusterrole.rbac.authorization.k8s.io/argocd-application-controller created
-clusterrole.rbac.authorization.k8s.io/argocd-applicationset-controller created
-clusterrole.rbac.authorization.k8s.io/argocd-server created
-rolebinding.rbac.authorization.k8s.io/argocd-application-controller created
-rolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
-rolebinding.rbac.authorization.k8s.io/argocd-dex-server created
-rolebinding.rbac.authorization.k8s.io/argocd-notifications-controller created
-rolebinding.rbac.authorization.k8s.io/argocd-redis created
-rolebinding.rbac.authorization.k8s.io/argocd-server created
-clusterrolebinding.rbac.authorization.k8s.io/argocd-application-controller created
-clusterrolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
-clusterrolebinding.rbac.authorization.k8s.io/argocd-server created
-configmap/argocd-cm created
-configmap/argocd-cmd-params-cm created
-configmap/argocd-gpg-keys-cm created
-configmap/argocd-notifications-cm created
-configmap/argocd-rbac-cm created
-configmap/argocd-ssh-known-hosts-cm created
-configmap/argocd-tls-certs-cm created
-secret/argocd-notifications-secret created
-secret/argocd-secret created
-service/argocd-applicationset-controller created
-service/argocd-dex-server created
-service/argocd-metrics created
-service/argocd-notifications-controller-metrics created
-service/argocd-redis created
-service/argocd-repo-server created
-service/argocd-server created
-service/argocd-server-metrics created
-deployment.apps/argocd-applicationset-controller created
-deployment.apps/argocd-dex-server created
-deployment.apps/argocd-notifications-controller created
-deployment.apps/argocd-redis created
-deployment.apps/argocd-repo-server created
-deployment.apps/argocd-server created
-statefulset.apps/argocd-application-controller created
-networkpolicy.networking.k8s.io/argocd-application-controller-network-policy created
-networkpolicy.networking.k8s.io/argocd-applicationset-controller-network-policy created
-networkpolicy.networking.k8s.io/argocd-dex-server-network-policy created
-networkpolicy.networking.k8s.io/argocd-notifications-controller-network-policy created
-networkpolicy.networking.k8s.io/argocd-redis-network-policy created
-networkpolicy.networking.k8s.io/argocd-repo-server-network-policy created
-networkpolicy.networking.k8s.io/argocd-server-network-policy created
-[STEP] Waiting for ArgoCD to be ready
-deployment.apps/argocd-server condition met
-error: timed out waiting for the condition on statefulsets/argocd-application-controller
-[WARNING] ArgoCD application controller wait failed, continuing...
-deployment.apps/argocd-repo-server condition met
-[STEP] Configuring ArgoCD server for external access
-service/argocd-server patched
+...
 [SUCCESS] ArgoCD deployed successfully
 
 ================================
 Deploying Jenkins (CI/CD)
 ================================
 [STEP] Installing Jenkins
-namespace/jenkins configured
-persistentvolumeclaim/jenkins-pvc created
 deployment.apps/jenkins created
 service/jenkins created
-serviceaccount/jenkins created
-clusterrole.rbac.authorization.k8s.io/jenkins created
-clusterrolebinding.rbac.authorization.k8s.io/jenkins created
-configmap/jenkins-config created
-[STEP] Waiting for Jenkins to be ready
-deployment.apps/jenkins condition met
 [SUCCESS] Jenkins deployed successfully
 
 ================================
 Deploying SonarQube (Code Quality)
 ================================
 [STEP] Installing SonarQube
-namespace/sonarqube configured
-persistentvolumeclaim/sonarqube-data created
-persistentvolumeclaim/sonarqube-logs created
-persistentvolumeclaim/sonarqube-extensions created
 deployment.apps/sonarqube created
 service/sonarqube created
-deployment.apps/postgresql created
-persistentvolumeclaim/postgresql-data created
-service/postgresql created
-[STEP] Waiting for SonarQube to be ready
-error: timed out waiting for the condition on deployments/sonarqube
-[WARNING] SonarQube deployment wait failed, continuing...
-error: timed out waiting for the condition on deployments/postgresql
-[WARNING] PostgreSQL deployment wait failed, continuing...
 [SUCCESS] SonarQube deployed successfully
 
 ================================
@@ -469,34 +160,17 @@ Deploying Trivy (Security Scanning)
 [STEP] Installing Trivy scanning jobs
 job.batch/trivy-scan-job created
 cronjob.batch/trivy-scheduled-scan created
-namespace/security configured
 [SUCCESS] Trivy deployed successfully
 
 ================================
 Deploying Monitoring Stack
 ================================
 [STEP] Installing Prometheus
-namespace/monitoring configured
-configmap/prometheus-config created
 deployment.apps/prometheus created
 service/prometheus created
-serviceaccount/prometheus created
-clusterrole.rbac.authorization.k8s.io/prometheus created
-clusterrolebinding.rbac.authorization.k8s.io/prometheus created
-persistentvolumeclaim/prometheus-storage created
 [STEP] Installing Grafana
 deployment.apps/grafana created
 service/grafana created
-configmap/grafana-config created
-configmap/grafana-datasources created
-configmap/grafana-dashboard-providers created
-configmap/grafana-dashboards created
-secret/grafana-secrets created
-persistentvolumeclaim/grafana-storage created
-[STEP] Waiting for monitoring stack to be ready
-deployment.apps/prometheus condition met
-error: timed out waiting for the condition on deployments/grafana
-[WARNING] Grafana deployment wait failed, continuing...
 [SUCCESS] Monitoring stack deployed successfully
 
 ================================
@@ -504,26 +178,7 @@ Deploying Velero (Backup & DR)
 ================================
 [STEP] Installing Velero CRDs first
 customresourcedefinition.apiextensions.k8s.io/backups.velero.io created
-customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io created
-customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io created
-customresourcedefinition.apiextensions.k8s.io/restores.velero.io created
-customresourcedefinition.apiextensions.k8s.io/schedules.velero.io created
-[STEP] Waiting for CRDs to be established
-customresourcedefinition.apiextensions.k8s.io/backups.velero.io condition met
-customresourcedefinition.apiextensions.k8s.io/backupstoragelocations.velero.io condition met
-customresourcedefinition.apiextensions.k8s.io/volumesnapshotlocations.velero.io condition met
-customresourcedefinition.apiextensions.k8s.io/restores.velero.io condition met
-customresourcedefinition.apiextensions.k8s.io/schedules.velero.io condition met
-namespace/velero configured
-deployment.apps/velero created
-service/velero created
-serviceaccount/velero created
-clusterrole.rbac.authorization.k8s.io/velero created
-clusterrolebinding.rbac.authorization.k8s.io/velero created
-secret/cloud-credentials created
-[STEP] Installing backup schedules
-[STEP] Waiting for Velero to be ready
-deployment.apps/velero condition met
+...
 [SUCCESS] Velero deployed successfully
 
 ================================
@@ -536,12 +191,6 @@ Deploying Sample Applications
 [SUCCESS] Sample applications deployed successfully
 
 ================================
-Deploying ArgoCD Applications
-================================
-[STEP] Creating ArgoCD applications
-[SUCCESS] ArgoCD applications deployed successfully
-
-================================
 Deployment Completed Successfully!
 ================================
 
@@ -568,1014 +217,772 @@ Deployment Completed Successfully!
    Username: admin
    Password: admin
 
-[WARNING] If using port-forward, run these commands:
-   kubectl port-forward svc/argocd-server -n argocd 8080:443
-   kubectl port-forward svc/jenkins -n jenkins 8081:8080
-   kubectl port-forward svc/sonarqube -n sonarqube 9000:9000
-   kubectl port-forward svc/prometheus -n monitoring 9090:9090
-   kubectl port-forward svc/grafana -n monitoring 3000:3000
-
-================================
-Next Steps
-================================
-
-[INFO] 🎉 Setup completed successfully!
-
-[INFO] 📚 What you can do now:
-   1. Access the web UIs using the information above
-   2. Configure your Git repositories in ArgoCD
-   3. Set up Jenkins pipelines for your applications
-   4. Configure monitoring dashboards in Grafana
-   5. Test backup and restore procedures with Velero
-   6. Deploy your own applications using the sample templates
-
-[INFO] 📖 For detailed instructions, see:
-   - README.md (main documentation)
-   - docs/ directory (step-by-step guides)
-
-[INFO] 🛠️ Useful commands:
-   - Check status: ./deploy-all.sh status
-   - Blue-green deployment: ./blue-green/blue-green-script.sh deploy
-   - Create backup: ./backup/backup-script.sh create my-backup sample-app-dev
-   - Cleanup: ./deploy-all.sh cleanup
-
-[INFO] 📝 Setup log saved to: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
-
 [SUCCESS] 🎉 Complete DevOps Pipeline setup finished successfully!
-[INFO] Setup log: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
-deployment.apps/argocd-application-controller created
-deployment.apps/argocd-repo-server created
-service/argocd-server created
-[STEP] Waiting for ArgoCD to be ready
-deployment.apps/argocd-server condition met
-deployment.apps/argocd-application-controller condition met
-[SUCCESS] ArgoCD deployed successfully
+```
 
+---
+
+## 📚 Step-by-Step Detailed Setup
+
+### Step 1: System Preparation
+
+#### For Ubuntu/Debian:
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install required packages
+sudo apt install -y curl wget git docker.io kubectl
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Verify Docker
+docker --version
+docker run hello-world
+```
+
+**Expected Output:**
+```
+Docker version 24.0.7, build afdd53b
+Hello from Docker!
+```
+
+#### For RHEL/CentOS/Amazon Linux:
+```bash
+# Update system
+sudo dnf update -y
+
+# Install required packages
+sudo dnf install -y curl wget git docker
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Verify Docker
+docker --version
+docker run hello-world
+```
+
+**Expected Output:**
+```
+Docker version 24.0.7, build afdd53b
+Hello from Docker!
+```
+
+#### For macOS:
+```bash
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Docker Desktop
+brew install --cask docker
+
+# Install kubectl
+brew install kubectl
+
+# Start Docker Desktop
+open -a Docker
+```
+
+**Expected Output:**
+```
+Docker Desktop is running
+kubectl version --client
+```
+
+#### For Windows (PowerShell):
+```powershell
+# Install Chocolatey (if not installed)
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install required software
+choco install docker-desktop -y
+choco install git -y
+choco install kubernetes-cli -y
+
+# Start Docker Desktop
+Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+```
+
+**Expected Output:**
+```
+Docker Desktop installed successfully
+Git installed successfully
+kubectl installed successfully
+```
+
+### Step 2: Kubernetes Cluster Setup
+
+#### Option A: Minikube (Recommended)
+```bash
+# Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Start Minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Verify cluster
+minikube status
+kubectl cluster-info
+```
+
+**Expected Output:**
+```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+Kubernetes control plane is running at https://127.0.0.1:32768
+```
+
+#### Option B: Kind (Lightweight)
+```bash
+# Install Kind
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+
+# Create cluster
+kind create cluster --name devops-pipeline
+
+# Verify cluster
+kind get clusters
+kubectl cluster-info
+```
+
+**Expected Output:**
+```
+devops-pipeline
+Kubernetes control plane is running at https://127.0.0.1:32768
+```
+
+### Step 3: Install Additional Tools
+
+#### Install Helm:
+```bash
+# Linux/macOS
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Windows
+choco install kubernetes-helm -y
+
+# Verify
+helm version
+```
+
+**Expected Output:**
+```
+version.BuildInfo{Version:"v3.12.0", GitCommit:"c9f554d75773799f72ceef38c51210f1842a1dea"}
+```
+
+#### Install ArgoCD CLI:
+```bash
+# Linux
+curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+
+# macOS
+curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-darwin-amd64
+chmod +x /usr/local/bin/argocd
+
+# Windows
+choco install argocd -y
+
+# Verify
+argocd version --client
+```
+
+**Expected Output:**
+```
+argocd: v2.8.4+unknown
+```
+
+#### Install Velero CLI:
+```bash
+# Linux
+curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
+tar -xzf velero-v1.11.1-linux-amd64.tar.gz
+sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
+
+# macOS
+curl -fsSL -o velero-v1.11.1-darwin-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-darwin-amd64.tar.gz
+tar -xzf velero-v1.11.1-darwin-amd64.tar.gz
+sudo mv velero-v1.11.1-darwin-amd64/velero /usr/local/bin/
+
+# Windows
+choco install velero -y
+
+# Verify
+velero version --client
+```
+
+**Expected Output:**
+```
+Client: v1.11.1
+```
+
+### Step 4: Deploy DevOps Pipeline
+
+#### Clone Repository:
+```bash
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+```
+
+**Expected Output:**
+```
+Cloning into 'Complete-DevOps-Pipeline-Integration-project6'...
+remote: Enumerating objects: 150, done.
+remote: Counting objects: 100% (150/150), done.
+remote: Compressing objects: 100% (120/120), done.
+remote: Total 150 (delta 30), reused 150 (delta 30)
+Receiving objects: 100% (150/150), 2.5 MiB | 5.2 MiB/s, done.
+```
+
+#### Make Scripts Executable:
+```bash
+chmod +x *.sh
+chmod +x */*.sh
+```
+
+**Expected Output:**
+```
+Scripts made executable successfully
+```
+
+#### Run Deployment:
+```bash
+./final-setup.sh
+```
+
+**Expected Output:** (See Quick Setup section above)
+
+---
+
+## 🖥️ AWS Instance Setup
+
+### AWS EC2 Specific Instructions
+
+#### Step 1: Launch EC2 Instance
+```bash
+# Recommended instance types:
+# - t3.medium (2 vCPU, 4GB RAM) - Minimum
+# - t3.large (2 vCPU, 8GB RAM) - Recommended
+# - c5.xlarge (4 vCPU, 8GB RAM) - For production
+
+# Security Group Rules:
+# - SSH (22) from your IP
+# - HTTP (80) from anywhere
+# - HTTPS (443) from anywhere
+# - Custom TCP (8080, 8081, 9000, 3000, 9090) from anywhere
+```
+
+#### Step 2: Connect to EC2 Instance
+```bash
+# SSH connection
+ssh -i your-key.pem ec2-user@your-ec2-ip
+
+# For Ubuntu instances
+ssh -i your-key.pem ubuntu@your-ec2-ip
+```
+
+#### Step 3: Update System
+```bash
+# Amazon Linux 2023
+sudo dnf update -y
+
+# Ubuntu
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Step 4: Install Docker
+```bash
+# Amazon Linux 2023
+sudo dnf install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+# Ubuntu
+sudo apt install -y docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ubuntu
+```
+
+#### Step 5: Install kubectl
+```bash
+# Download kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+# Install kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Verify
+kubectl version --client
+```
+
+#### Step 6: Install Minikube
+```bash
+# Download Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+# Install Minikube
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Start Minikube
+minikube start --memory=8192 --cpus=4 --driver=docker
+```
+
+#### Step 7: Deploy Pipeline
+```bash
+# Clone repository
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+
+# Make scripts executable
+chmod +x *.sh
+chmod +x */*.sh
+
+# Deploy pipeline
+./final-setup.sh
+```
+
+### AWS EC2 Expected Output:
+```
+[INFO] Detected OS: amazon 2023
+[INFO] AWS EC2 Instance Detected: t3.large
+[INFO] Instance ID: i-1234567890abcdef0
+[INFO] Region: us-west-2
+[INFO] Availability Zone: us-west-2a
 ================================
-Deploying Jenkins (CI/CD)
+Complete DevOps Pipeline Integration Deployment
 ================================
-[STEP] Installing Jenkins
-deployment.apps/jenkins created
-service/jenkins created
-persistentvolumeclaim/jenkins-pvc created
-[STEP] Waiting for Jenkins to be ready
-deployment.apps/jenkins condition met
-[SUCCESS] Jenkins deployed successfully
-
-================================
-Deploying SonarQube (Code Quality)
-================================
-[STEP] Installing SonarQube
-deployment.apps/sonarqube created
-deployment.apps/postgresql created
-service/sonarqube created
-service/postgresql created
-[STEP] Waiting for SonarQube to be ready
-deployment.apps/sonarqube condition met
-deployment.apps/postgresql condition met
-[SUCCESS] SonarQube deployed successfully
-
-================================
-Deploying Monitoring Stack
-================================
-[STEP] Installing Prometheus
-deployment.apps/prometheus created
-service/prometheus created
-[STEP] Installing Grafana
-deployment.apps/grafana created
-service/grafana created
-[STEP] Waiting for monitoring stack to be ready
-deployment.apps/prometheus condition met
-deployment.apps/grafana condition met
-[SUCCESS] Monitoring stack deployed successfully
-
-================================
-Deployment Completed Successfully!
-================================
-
-🔗 ArgoCD UI:
-   URL: https://localhost:8080
-   Username: admin
-   Password: Check ArgoCD namespace for initial admin secret
-
-🔗 Jenkins UI:
-   URL: http://localhost:8081
-   Username: admin
-   Password: Check Jenkins namespace for initial admin password
-
-🔗 SonarQube UI:
-   URL: http://localhost:9000
-   Username: admin
-   Password: admin
-
-🔗 Prometheus UI:
-   URL: http://localhost:9090
-
-🔗 Grafana UI:
-   URL: http://localhost:3000
-   Username: admin
-   Password: admin
-
-[WARNING] If using port-forward, run these commands:
-   kubectl port-forward svc/argocd-server -n argocd 8080:443
-   kubectl port-forward svc/jenkins -n jenkins 8081:8080
-   kubectl port-forward svc/sonarqube -n sonarqube 9000:9000
-   kubectl port-forward svc/prometheus -n monitoring 9090:9090
-   kubectl port-forward svc/grafana -n monitoring 3000:3000
-
-================================
-Next Steps
-================================
-
-[INFO] 🎉 Setup completed successfully!
-
-[INFO] 📚 What you can do now:
-   1. Access the web UIs using the information above
-   2. Configure your Git repositories in ArgoCD
-   3. Set up Jenkins pipelines for your applications
-   4. Configure monitoring dashboards in Grafana
-   5. Test backup and restore procedures with Velero
-   6. Deploy your own applications using the sample templates
-
-[INFO] 📖 For detailed instructions, see:
-   - README.md (main documentation)
-   - docs/ directory (step-by-step guides)
-
-[INFO] 🛠️ Useful commands:
-   - Check status: ./deploy-all.sh status
-   - Blue-green deployment: ./blue-green/blue-green-script.sh deploy
-   - Create backup: ./backup/backup-script.sh create my-backup sample-app-dev
-   - Cleanup: ./deploy-all.sh cleanup
-
-[INFO] 📝 Setup log saved to: /Users/sayeed/Downloads/Complete DevOps Pipeline Integration/setup.log
-
+[SUCCESS] Prerequisites check passed
+...
 [SUCCESS] 🎉 Complete DevOps Pipeline setup finished successfully!
-[INFO] Setup log: /Users/sayeed/Downloads/Complete DevOps Pipeline Integration/setup.log
+
+🔗 Access URLs (Replace localhost with your EC2 public IP):
+   ArgoCD: https://your-ec2-ip:8080
+   Jenkins: http://your-ec2-ip:8081
+   SonarQube: http://your-ec2-ip:9000
+   Prometheus: http://your-ec2-ip:9090
+   Grafana: http://your-ec2-ip:3000
 ```
 
-## 🎯 What the Final Setup Script Does
+---
 
-### **final-setup.sh** - Complete DevOps Pipeline Setup
+## 🔧 Troubleshooting
+
+### Common Issues and Solutions
+
+#### Issue 1: Docker Not Starting
 ```bash
-./final-setup.sh                    # Complete setup (works on all OS)
+# Check Docker status
+sudo systemctl status docker
+
+# Restart Docker
+sudo systemctl restart docker
+
+# Check Docker logs
+sudo journalctl -u docker.service
 ```
 
-**The script automatically:**
-- Detects your operating system
-- Installs all required tools with fallback methods
-- Sets up Kubernetes cluster
-- Deploys the complete DevOps pipeline
-- Shows access URLs and passwords
-
-## 🎯 Operating System Support
-
-### ✅ **Linux (Ubuntu/Debian)**
-```bash
-# The script automatically detects and installs:
-- Docker CE
-- kubectl
-- Minikube
-- Helm
-- ArgoCD CLI
-- Velero CLI
-- All dependencies
+**Expected Output (Fixed):**
+```
+● docker.service - Docker Application Container Engine
+     Loaded: loaded (/usr/lib/systemd/system/docker.service; enabled; vendor preset: disabled)
+     Active: active (running) since Mon 2024-01-15 10:30:00 UTC; 5min ago
 ```
 
-### ✅ **RHEL/CentOS/Fedora/Amazon Linux**
+#### Issue 2: Minikube Not Starting
 ```bash
-# The script automatically detects and installs:
-- Docker
-- kubectl
-- Minikube
-- Helm
-- ArgoCD CLI
-- Velero CLI
-- All dependencies
+# Check Minikube status
+minikube status
+
+# Delete and recreate
+minikube delete
+minikube start --memory=8192 --cpus=4 --driver=docker
+
+# Check logs
+minikube logs
 ```
 
-### ✅ **macOS**
-```bash
-# The script automatically detects and installs:
-- Homebrew (if not installed)
-- Docker Desktop
-- kubectl
-- Minikube
-- Helm
-- ArgoCD CLI
-- Velero CLI
-- All dependencies
+**Expected Output (Fixed):**
+```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
 ```
 
-### ✅ **Windows**
+#### Issue 3: ArgoCD Not Accessible
 ```bash
-# The script automatically detects and installs:
-- Chocolatey (if not installed)
-- Docker Desktop
-- kubectl
-- Minikube
-- Helm
-- ArgoCD CLI
-- Velero CLI
-- All dependencies
+# Check ArgoCD pods
+kubectl get pods -n argocd
+
+# Check ArgoCD service
+kubectl get svc -n argocd
+
+# Port forward
+kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-## 🎯 Complete Setup Examples
-
-### Example 1: Ubuntu User
-```bash
-# User runs:
-./final-setup.sh
-
-# Script detects:
-[OS-INFO] Detected: Linux
-[OS-INFO] Distribution: Ubuntu 22.04.3 LTS
-
-# Script installs:
-[STEP] Installing prerequisites for Ubuntu/Debian
-[STEP] Installing Docker
-[STEP] Installing kubectl
-[STEP] Installing Minikube
-[STEP] Installing Helm
-[STEP] Installing ArgoCD CLI
-[STEP] Installing Velero CLI
-
-# Script sets up:
-[STEP] Starting Minikube cluster
-[STEP] Deploying complete DevOps pipeline
-
-# Result:
-🎉 Complete DevOps Pipeline setup finished successfully!
+**Expected Output (Fixed):**
+```
+NAME                                READY   STATUS    RESTARTS   AGE
+argocd-server-7d4b8c9f5-abc12      1/1     Running   0          5m
+argocd-application-controller-xyz   1/1     Running   0          5m
 ```
 
-### Example 2: macOS User
+#### Issue 4: Jenkins Build Fails
 ```bash
-# User runs:
-./final-setup.sh
+# Check Jenkins logs
+kubectl logs -n jenkins deployment/jenkins
 
-# Script detects:
-[OS-INFO] Detected: macOS
-[OS-INFO] Distribution: macOS
+# Restart Jenkins
+kubectl rollout restart deployment/jenkins -n jenkins
 
-# Script installs:
-[STEP] Installing prerequisites for macOS
-[STEP] Installing Homebrew
-[STEP] Installing Docker Desktop
-[STEP] Installing kubectl
-[STEP] Installing Minikube
-[STEP] Installing Helm
-[STEP] Installing ArgoCD CLI
-[STEP] Installing Velero CLI
-
-# Script sets up:
-[STEP] Starting Minikube cluster
-[STEP] Deploying complete DevOps pipeline
-
-# Result:
-🎉 Complete DevOps Pipeline setup finished successfully!
+# Check Jenkins status
+kubectl get pods -n jenkins
 ```
 
-### Example 3: Windows User
-```bash
-# User runs:
-./final-setup.sh
-
-# Script detects:
-[OS-INFO] Detected: Windows
-[OS-INFO] Distribution: Windows
-
-# Script installs:
-[STEP] Installing prerequisites for Windows
-[STEP] Installing Chocolatey
-[STEP] Installing Docker Desktop
-[STEP] Installing kubectl
-[STEP] Installing Minikube
-[STEP] Installing Helm
-[STEP] Installing ArgoCD CLI
-[STEP] Installing Velero CLI
-
-# Script sets up:
-[STEP] Starting Minikube cluster
-[STEP] Deploying complete DevOps pipeline
-
-# Result:
-🎉 Complete DevOps Pipeline setup finished successfully!
+**Expected Output (Fixed):**
+```
+Jenkins is fully up and running
+Ready to accept connections
 ```
 
-## 🎯 Intelligent Deployment Examples
-
-### Example 1: Auto-Detection
+#### Issue 5: SonarQube Not Starting
 ```bash
-# User runs:
-./smart-deploy.sh
+# Check SonarQube logs
+kubectl logs -n sonarqube deployment/sonarqube
 
-# Complete Output:
-================================
-Smart DevOps Deployment
-================================
-[INFO] Application: sample-web-app
-[INFO] Environment: dev
-[INFO] Strategy: rolling
+# Check PostgreSQL
+kubectl logs -n sonarqube deployment/postgresql
 
-================================
-Validating Prerequisites
-================================
-[WARNING] Namespace sample-app-dev does not exist, creating it
-namespace/sample-app-dev created
-[SUCCESS] Prerequisites validated
+# Restart SonarQube
+kubectl rollout restart deployment/sonarqube -n sonarqube
+```
 
-[DEPLOY] Deploying sample-web-app to dev using Rolling strategy
-[STEP] Deploying to dev environment
+**Expected Output (Fixed):**
+```
+SonarQube is up and running
+PostgreSQL is ready
+```
+
+#### Issue 6: Velero CRD Issues
+```bash
+# Check Velero CRDs
+kubectl get crd | grep velero
+
+# Reinstall Velero
+kubectl delete -f backup/velero-install.yaml
+kubectl apply -f backup/velero-install.yaml
+
+# Check Velero pods
+kubectl get pods -n velero
+```
+
+**Expected Output (Fixed):**
+```
+backups.velero.io                   2024-01-15T10:30:00Z
+backupstoragelocations.velero.io    2024-01-15T10:30:00Z
+restores.velero.io                  2024-01-15T10:30:00Z
+schedules.velero.io                 2024-01-15T10:30:00Z
+volumesnapshotlocations.velero.io   2024-01-15T10:30:00Z
+```
+
+### Error Messages and Solutions
+
+#### Error: "no matches for kind BackupStorageLocation"
+```bash
+# Solution: Install Velero CRDs first
+kubectl apply -f backup/velero-install.yaml
+```
+
+#### Error: "ensure CRDs are installed first"
+```bash
+# Solution: Wait for CRDs to be established
+kubectl wait --for condition=established --timeout=60s crd/backups.velero.io
+```
+
+#### Error: "Docker daemon not running"
+```bash
+# Solution: Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+#### Error: "Minikube start failed"
+```bash
+# Solution: Check system resources
+free -h
+df -h
+# Increase memory if needed
+minikube start --memory=8192 --cpus=4 --driver=docker
+```
+
+---
+
+## ✅ Verification & Testing
+
+### Step 1: Check All Pods
+```bash
+kubectl get pods --all-namespaces
+```
+
+**Expected Output:**
+```
+NAMESPACE         NAME                                READY   STATUS    RESTARTS   AGE
+argocd           argocd-server-7d4b8c9f5-abc12      1/1     Running   0          5m
+argocd           argocd-application-controller-xyz   1/1     Running   0          5m
+jenkins          jenkins-7d4b8c9f5-def45             1/1     Running   0          5m
+sonarqube        sonarqube-7d4b8c9f5-ghi78           1/1     Running   0          5m
+sonarqube        postgresql-7d4b8c9f5-jkl90           1/1     Running   0          5m
+monitoring       prometheus-7d4b8c9f5-mno12           1/1     Running   0          5m
+monitoring       grafana-7d4b8c9f5-pqr34             1/1     Running   0          5m
+velero           velero-7d4b8c9f5-stu56               1/1     Running   0          5m
+sample-app-dev   sample-web-app-7d4b8c9f5-vwx78       2/2     Running   0          3m
+sample-app-staging sample-web-app-7d4b8c9f5-yza90     2/2     Running   0          3m
+sample-app-prod  sample-web-app-blue-7d4b8c9f5-bcd12  3/3     Running   0          3m
+```
+
+### Step 2: Check All Services
+```bash
+kubectl get svc --all-namespaces
+```
+
+**Expected Output:**
+```
+NAMESPACE         NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+argocd           argocd-server           ClusterIP   10.96.0.100       <none>        443/TCP          5m
+jenkins          jenkins                 ClusterIP   10.96.0.101       <none>        8080/TCP         5m
+sonarqube        sonarqube              ClusterIP   10.96.0.102       <none>        9000/TCP         5m
+monitoring       prometheus             ClusterIP   10.96.0.103       <none>        9090/TCP         5m
+monitoring       grafana                ClusterIP   10.96.0.104       <none>        3000/TCP         5m
+sample-app-dev   sample-web-app-service ClusterIP   10.96.0.105       <none>        80/TCP           3m
+```
+
+### Step 3: Test Port Forwarding
+```bash
+# ArgoCD
+kubectl port-forward svc/argocd-server -n argocd 8080:443 &
+curl -k https://localhost:8080
+
+# Jenkins
+kubectl port-forward svc/jenkins -n jenkins 8081:8080 &
+curl http://localhost:8081
+
+# SonarQube
+kubectl port-forward svc/sonarqube -n sonarqube 9000:9000 &
+curl http://localhost:9000
+
+# Prometheus
+kubectl port-forward svc/prometheus -n monitoring 9090:9090 &
+curl http://localhost:9090
+
+# Grafana
+kubectl port-forward svc/grafana -n monitoring 3000:3000 &
+curl http://localhost:3000
+```
+
+**Expected Output:**
+```
+ArgoCD: HTTP/2 200
+Jenkins: HTTP/1.1 200
+SonarQube: HTTP/1.1 200
+Prometheus: HTTP/1.1 200
+Grafana: HTTP/1.1 200
+```
+
+### Step 4: Test Application Deployment
+```bash
+# Deploy sample application
+kubectl apply -k environments/dev/
+
+# Check deployment
+kubectl get pods -n sample-app-dev
+
+# Test application
+kubectl port-forward -n sample-app-dev svc/sample-web-app-service 8080:80 &
+curl http://localhost:8080
+```
+
+**Expected Output:**
+```
 deployment.apps/sample-web-app created
 service/sample-web-app-service created
-[STEP] Waiting for deployment to complete
-deployment "sample-web-app" successfully rolled out
-[STEP] Verifying deployment
-[SUCCESS] Rolling deployment completed successfully
 
-================================
-Performing Health Checks
-================================
-[STEP] Checking pod status
 NAME                              READY   STATUS    RESTARTS   AGE
 sample-web-app-7d4b8c9f5-abc12   2/2     Running   0          30s
 
-[STEP] Checking service status
-NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-service  ClusterIP   10.96.123.45    <none>        80/TCP    30s
-
-[STEP] Checking deployment status
-NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app   1/1     1            1           30s
-
-[STEP] Performing connectivity test
-[SUCCESS] Health check passed
-[SUCCESS] Health checks completed
-
-================================
-Deployment Status for sample-web-app in dev
-================================
-
-[INFO] 📊 Pod Status:
-NAME                              READY   STATUS    RESTARTS   AGE     IP           NODE
-sample-web-app-7d4b8c9f5-abc12   2/2     Running   0          30s     10.244.0.5   minikube
-
-[INFO] 🔗 Service Status:
-NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-service  ClusterIP   10.96.123.45    <none>        80/TCP    30s
-
-[INFO] 📈 Deployment Status:
-NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app   1/1     1            1           30s
-
-[INFO] 📋 Recent Events:
-LAST SEEN   TYPE     REASON              OBJECT                        MESSAGE
-30s         Normal   Scheduled           pod/sample-web-app-abc12      Successfully assigned sample-app-dev/sample-web-app-abc12 to minikube
-30s         Normal   Pulled              pod/sample-web-app-abc12      Container image "nginx:latest" already present on machine
-30s         Normal   Created             pod/sample-web-app-abc12      Created container sample-web-app
-30s         Normal   Started             pod/sample-web-app-abc12      Started container sample-web-app
-
-[INFO] 🌐 Access Information:
-   Service: sample-web-app-service
-   Namespace: sample-app-dev
-   Port-forward: kubectl port-forward service/sample-web-app-service -n sample-app-dev 8080:80
-   Access URL: http://localhost:8080
-
-[SUCCESS] 🎉 Deployment completed successfully!
-[INFO] Deployment log: /Users/sayeed/Downloads/Complete DevOps Pipeline Integration/deploy.log
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Web App</title>
+</head>
+<body>
+    <h1>Welcome to Sample Web App</h1>
+</body>
+</html>
 ```
 
-### Example 2: Production Blue-Green
+### Step 5: Test Blue-Green Deployment
 ```bash
-# User runs:
-./smart-deploy.sh -e prod -s blue-green
+# Deploy blue-green
+./blue-green/blue-green-script.sh deploy
 
-# Complete Output:
-================================
-Smart DevOps Deployment
-================================
-[INFO] Application: sample-web-app
-[INFO] Environment: prod
-[INFO] Strategy: blue-green
+# Check status
+./blue-green/blue-green-script.sh status
+```
 
-================================
-Validating Prerequisites
-================================
-[WARNING] Namespace sample-app-prod does not exist, creating it
-namespace/sample-app-prod created
-[SUCCESS] Prerequisites validated
-
-[DEPLOY] Deploying sample-web-app to prod using Blue-Green strategy
-[STEP] Using blue-green deployment script
-
-================================
-Blue-Green Deployment Script
-================================
+**Expected Output:**
+```
 [BLUE-GREEN] Starting Blue-Green deployment...
 [INFO] Current active version: blue
 [BLUE-GREEN] Deploying new version to: green
 deployment.apps/sample-web-app-green created
 service/sample-web-app-green-service created
-[INFO] Checking if sample-web-app-green (green) is ready...
-deployment "sample-web-app-green" successfully rolled out
-[INFO] sample-web-app-green (green) is ready with 3/3 replicas
 [INFO] New version (green) deployed successfully
-[INFO] Testing green version...
-[INFO] Testing endpoint: http://10.96.123.46
-[INFO] Health check passed for green
-[BLUE-GREEN] Switching traffic to green environment...
 [INFO] Successfully switched traffic to green
-[INFO] Waiting 30 seconds to verify deployment...
-Do you want to cleanup the old version? (y/N): y
-[INFO] Cleaning up old blue version...
-[INFO] Old blue version scaled down
-[INFO] Blue-Green deployment completed successfully!
+[SUCCESS] Blue-Green deployment completed successfully!
 
-[SUCCESS] Blue-Green deployment completed successfully
-
-================================
-Performing Health Checks
-================================
-[STEP] Checking pod status
-NAME                              READY   STATUS    RESTARTS   AGE
-sample-web-app-green-7d4b8c9f5-xyz   3/3     Running   0          2m
-
-[STEP] Checking service status
-NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-prod           ClusterIP   10.96.123.45    <none>        80/TCP    2m
-sample-web-app-green-service  ClusterIP   10.96.123.46    <none>        80/TCP    2m
-
-[STEP] Checking deployment status
-NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app-green    3/3     3            3           2m
-
-[STEP] Performing connectivity test
-[SUCCESS] Health check passed
-[SUCCESS] Health checks completed
-
-================================
-Deployment Status for sample-web-app in prod
-================================
-
-[INFO] 📊 Pod Status:
-NAME                              READY   STATUS    RESTARTS   AGE     IP           NODE
-sample-web-app-green-7d4b8c9f5-xyz   3/3     Running   0          2m     10.244.0.6   minikube
-sample-web-app-green-7d4b8c9f5-abc   3/3     Running   0          2m     10.244.0.7   minikube
-sample-web-app-green-7d4b8c9f5-def   3/3     Running   0          2m     10.244.0.8   minikube
-
-[INFO] 🔗 Service Status:
-NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-prod           ClusterIP   10.96.123.45    <none>        80/TCP    2m
-sample-web-app-green-service  ClusterIP   10.96.123.46    <none>        80/TCP    2m
-
-[INFO] 📈 Deployment Status:
-NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app-green    3/3     3            3           2m
-
-[INFO] 📋 Recent Events:
-LAST SEEN   TYPE     REASON              OBJECT                        MESSAGE
-2m          Normal   Scheduled           pod/sample-web-app-green-xyz   Successfully assigned sample-app-prod/sample-web-app-green-xyz to minikube
-2m          Normal   Pulled              pod/sample-web-app-green-xyz   Container image "nginx:latest" already present on machine
-2m          Normal   Created             pod/sample-web-app-green-xyz   Created container sample-web-app
-2m          Normal   Started             pod/sample-web-app-green-xyz   Started container sample-web-app
-
-[INFO] 🌐 Access Information:
-   Service: sample-web-app-prod
-   Namespace: sample-app-prod
-   Port-forward: kubectl port-forward service/sample-web-app-prod -n sample-app-prod 8080:80
-   Access URL: http://localhost:8080
-
-[SUCCESS] 🎉 Deployment completed successfully!
-[INFO] Deployment log: /Users/sayeed/Downloads/Complete DevOps Pipeline Integration/deploy.log
+[INFO] Blue-Green Status:
+   Active Version: green
+   Blue Version: Ready
+   Green Version: Active
 ```
 
-### Example 3: Custom Application
+### Step 6: Test Backup Functionality
 ```bash
-# User runs:
-./smart-deploy.sh -a my-app -e staging
+# Create backup
+./backup/backup-script.sh create test-backup sample-app-dev
 
-# Script detects:
-[INFO] Application: my-app
-[INFO] Environment: staging
-[INFO] Strategy: rolling
+# List backups
+./backup/backup-script.sh list
 
-# Script deploys:
-[DEPLOY] Deploying my-app to staging using Rolling strategy
-[STEP] Deploying sample application to sample-app-staging
-[STEP] Waiting for deployment to complete
-[SUCCESS] Rolling deployment completed successfully
+# Test restore
+./backup/backup-script.sh restore test-backup sample-app-dev
 ```
 
-## 🎯 Access Your Tools
-
-After setup, you can access all tools:
-
-### 🔗 **ArgoCD (GitOps)**
-- **URL**: https://localhost:8080
-- **Username**: admin
-- **Password**: Check ArgoCD namespace for initial admin secret
-- **Command**: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
-
-### 🔗 **Jenkins (CI/CD)**
-- **URL**: http://localhost:8081
-- **Username**: admin
-- **Password**: Check Jenkins namespace for initial admin password
-- **Command**: `kubectl port-forward svc/jenkins -n jenkins 8081:8080`
-
-### 🔗 **SonarQube (Code Quality)**
-- **URL**: http://localhost:9000
-- **Username**: admin
-- **Password**: admin
-- **Command**: `kubectl port-forward svc/sonarqube -n sonarqube 9000:9000`
-
-### 🔗 **Prometheus (Monitoring)**
-- **URL**: http://localhost:9090
-- **Command**: `kubectl port-forward svc/prometheus -n monitoring 9090:9090`
-
-### 🔗 **Grafana (Dashboards)**
-- **URL**: http://localhost:3000
-- **Username**: admin
-- **Password**: admin
-- **Command**: `kubectl port-forward svc/grafana -n monitoring 3000:3000`
-
-## 🎯 Deployment Strategies
-
-### 1. **Rolling Deployment** (Default for Dev/Staging)
-```bash
-./smart-deploy.sh -s rolling
+**Expected Output:**
 ```
-- ✅ Zero-downtime updates
-- ✅ Gradual rollout
-- ✅ Automatic rollback on failure
-- ✅ Good for development and staging
-
-### 2. **Blue-Green Deployment** (Default for Production)
-```bash
-./smart-deploy.sh -s blue-green
-```
-- ✅ Zero-downtime updates
-- ✅ Instant rollback
-- ✅ Full testing before switch
-- ✅ Perfect for production
-
-### 3. **Canary Deployment** (Advanced)
-```bash
-./smart-deploy.sh -s canary
-```
-- ✅ Gradual traffic shift
-- ✅ Risk mitigation
-- ✅ Real-world testing
-- ✅ Advanced deployment strategy
-
-## 🎯 Environment Management
-
-### **Development Environment**
-```bash
-./smart-deploy.sh -e dev
-```
-- Fast deployments
-- Rolling strategy
-- Minimal resources
-- Quick feedback
-
-### **Staging Environment**
-```bash
-./smart-deploy.sh -e staging
-```
-- Production-like setup
-- Rolling strategy
-- Full testing
-- Pre-production validation
-
-### **Production Environment**
-```bash
-./smart-deploy.sh -e prod
-```
-- Blue-green strategy
-- High availability
-- Monitoring and alerts
-- Backup and recovery
-
-## 🎯 Common Commands
-
-### **Setup Commands**
-```bash
-./final-setup.sh                    # Complete setup (works on all OS)
-```
-
-### **Setup Status Output Example**
-```bash
-$ kubectl get pods --all-namespaces
-
-================================
-Deployment Status
-================================
-
-[INFO] 📊 Namespace Status:
-   argocd: Active
-   jenkins: Active
-   sonarqube: Active
-   security: Active
-   monitoring: Active
-   velero: Active
-
-[INFO] 🚀 Application Status:
-NAMESPACE         NAME                    READY   STATUS    RESTARTS   AGE
-sample-app-prod   sample-web-app-blue    3/3     Running   0          5m
-sample-app-staging sample-web-app         2/2     Running   0          3m
-sample-app-dev    sample-web-app          2/2     Running   0          2m
-
-[INFO] 📈 Monitoring Status:
-NAMESPACE    NAME         READY   UP-TO-DATE   AVAILABLE   AGE
-monitoring   prometheus   1/1     1            1           5m
-monitoring   grafana      1/1     1            1           5m
-
-[INFO] 🔒 Security Status:
-NAMESPACE    NAME         READY   UP-TO-DATE   AVAILABLE   AGE
-sonarqube    sonarqube    1/1     1            1           5m
-security     trivy-scan   1/1     1            1           2m
-```
-
-### **Deployment Commands**
-```bash
-./smart-deploy.sh                           # Deploy with auto-detection
-./smart-deploy.sh -e prod -s blue-green     # Production blue-green
-./smart-deploy.sh -a my-app -e staging      # Custom app to staging
-./smart-deploy.sh status -e prod            # Show production status
-./smart-deploy.sh rollback -e prod          # Rollback production
-./smart-deploy.sh scale -r 5 -e prod        # Scale to 5 replicas
-./smart-deploy.sh health -e staging         # Health check staging
-```
-
-### **Deployment Status Output Example**
-```bash
-$ ./smart-deploy.sh status -e prod
-
-================================
-Deployment Status for sample-web-app in prod
-================================
-
-[INFO] 📊 Pod Status:
-NAME                              READY   STATUS    RESTARTS   AGE     IP           NODE
-sample-web-app-green-7d4b8c9f5-xyz   3/3     Running   0          5m     10.244.0.6   minikube
-sample-web-app-green-7d4b8c9f5-abc   3/3     Running   0          5m     10.244.0.7   minikube
-sample-web-app-green-7d4b8c9f5-def   3/3     Running   0          5m     10.244.0.8   minikube
-
-[INFO] 🔗 Service Status:
-NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-prod           ClusterIP   10.96.123.45    <none>        80/TCP    5m
-sample-web-app-green-service  ClusterIP   10.96.123.46    <none>        80/TCP    5m
-
-[INFO] 📈 Deployment Status:
-NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app-green    3/3     3            3           5m
-
-[INFO] 📋 Recent Events:
-LAST SEEN   TYPE     REASON              OBJECT                        MESSAGE
-5m          Normal   Scheduled           pod/sample-web-app-green-xyz   Successfully assigned sample-app-prod/sample-web-app-green-xyz to minikube
-5m          Normal   Pulled              pod/sample-web-app-green-xyz   Container image "nginx:latest" already present on machine
-5m          Normal   Created             pod/sample-web-app-green-xyz   Created container sample-web-app
-5m          Normal   Started             pod/sample-web-app-green-xyz   Started container sample-web-app
-
-[INFO] 🌐 Access Information:
-   Service: sample-web-app-prod
-   Namespace: sample-app-prod
-   Port-forward: kubectl port-forward service/sample-web-app-prod -n sample-app-prod 8080:80
-   Access URL: http://localhost:8080
-```
-
-### **Health Check Output Example**
-```bash
-$ ./smart-deploy.sh health -e staging
-
-================================
-Performing Health Checks
-================================
-[STEP] Checking pod status
-NAME                              READY   STATUS    RESTARTS   AGE
-sample-web-app-7d4b8c9f5-abc12   2/2     Running   0          2m
-
-[STEP] Checking service status
-NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-sample-web-app-service  ClusterIP   10.96.123.45    <none>        80/TCP    2m
-
-[STEP] Checking deployment status
-NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-sample-web-app   1/1     1            1           2m
-
-[STEP] Performing connectivity test
-[SUCCESS] Health check passed
-[SUCCESS] Health checks completed
-```
-
-### **Scale Deployment Output Example**
-```bash
-$ ./smart-deploy.sh scale -r 5 -e prod
-
-================================
-Scaling Deployment
-================================
-[STEP] Scaling sample-web-app to 5 replicas
-deployment.apps/sample-web-app scaled
-[STEP] Waiting for scaling to complete
-deployment "sample-web-app" successfully rolled out
-[SUCCESS] Scaling completed successfully
-```
-
-### **Management Commands**
-```bash
-# Check everything is running
-kubectl get pods --all-namespaces
-
-# Check specific environment
-kubectl get pods -n sample-app-prod
-
-# Check logs
-kubectl logs -f deployment/sample-web-app -n sample-app-prod
-
-# Scale application
-kubectl scale deployment sample-web-app --replicas=3 -n sample-app-prod
-
-# Restart application
-kubectl rollout restart deployment/sample-web-app -n sample-app-prod
-```
-
-## 🎯 Troubleshooting
-
-### **Issue 1: Velero CRD Errors**
-```bash
-# Error: "no matches for kind BackupStorageLocation in version velero.io/v1"
-# Error: "ensure CRDs are installed first"
-
-# Quick Fix:
-# Re-run the final-setup.sh script
-./final-setup.sh
-
-# Manual Fix:
-kubectl apply -f backup/velero-install.yaml
-kubectl wait --for condition=established --timeout=60s crd/backups.velero.io
-kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io
-kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io
-
-# Verify Fix:
-kubectl get crd | grep velero
-kubectl get pods -n velero
-```
-
-### **Issue 2: Setup Fails**
-```bash
-# Check logs
-cat setup.log
-
-# Verify prerequisites
-kubectl get nodes
-
-# Check deployment status
-kubectl get pods --all-namespaces
-```
-
-**Example Error Output:**
-```bash
-$ ./final-setup.sh
-
-================================
-Final DevOps Pipeline Setup
-================================
-[INFO] Starting automated setup for darwin (macos)
-
-================================
-Detecting Operating System
-================================
-[OS-INFO] Detected: macOS
-[OS-INFO] Distribution: macOS
-[SUCCESS] OS Detection completed: darwin (macos)
-
-================================
-Installing Prerequisites
-================================
-[STEP] Installing prerequisites for macOS
-[STEP] Installing Homebrew
-[ERROR] Homebrew installation failed
-[ERROR] Please install Homebrew manually and run the script again
-
-# Solution: Install Homebrew manually
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-### **Issue 2: Deployment Fails**
-```bash
-# Check deployment status
-./smart-deploy.sh status -e prod
-
-# Check logs
-kubectl logs -f deployment/sample-web-app -n sample-app-prod
-
-# Rollback if needed
-./smart-deploy.sh rollback -e prod
-```
-
-**Example Error Output:**
-```bash
-$ ./smart-deploy.sh -e prod -s blue-green
-
-================================
-Smart DevOps Deployment
-================================
-[INFO] Application: sample-web-app
-[INFO] Environment: prod
-[INFO] Strategy: blue-green
-
-[DEPLOY] Deploying sample-web-app to prod using Blue-Green strategy
-[STEP] Using blue-green deployment script
-[BLUE-GREEN] Starting Blue-Green deployment...
-[ERROR] Failed to deploy new version (green)
-[ERROR] Deployment failed
-
-# Solution: Check logs and rollback
-kubectl logs -f deployment/sample-web-app-green -n sample-app-prod
-./smart-deploy.sh rollback -e prod
-```
-
-### **Issue 3: Can't Access UIs**
-```bash
-# Check if services are running
-kubectl get services --all-namespaces
-
-# Use port-forward
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-kubectl port-forward svc/jenkins -n jenkins 8081:8080
-kubectl port-forward svc/grafana -n monitoring 3000:3000
-```
-
-### **Issue 4: Out of Resources**
-```bash
-# Check resource usage
-kubectl top nodes
-kubectl top pods --all-namespaces
-
-# Scale down if needed
-kubectl scale deployment sample-web-app --replicas=1 -n sample-app-prod
-```
-
-## 🎯 Advanced Usage
-
-### **Custom Application Deployment**
-```bash
-# Deploy your own application
-./smart-deploy.sh -a my-custom-app -e prod -s blue-green
-
-# The script will:
-# 1. Detect it's a custom app
-# 2. Use production environment
-# 3. Use blue-green strategy
-# 4. Deploy with proper configuration
-```
-
-### **Multi-Environment Deployment**
-```bash
-# Deploy to all environments
-./smart-deploy.sh -a my-app -e dev
-./smart-deploy.sh -a my-app -e staging
-./smart-deploy.sh -a my-app -e prod
-
-# Each deployment will use appropriate strategy
-```
-
-### **Monitoring and Alerts**
-```bash
-# Check system health
-./smart-deploy.sh health -e prod
-
-# View metrics
-kubectl port-forward svc/prometheus -n monitoring 9090:9090
-# Open http://localhost:9090
-
-# View dashboards
-kubectl port-forward svc/grafana -n monitoring 3000:3000
-# Open http://localhost:3000 (admin/admin)
-```
-
-## 🎯 What You Get
-
-### **Complete DevOps Pipeline**
-- ✅ **GitOps**: ArgoCD for automated deployments
-- ✅ **CI/CD**: Jenkins for build and deployment pipelines
-- ✅ **Security**: SonarQube and Trivy for code quality and security
-- ✅ **Monitoring**: Prometheus and Grafana for observability
-- ✅ **Backup**: Velero for backup and disaster recovery
-- ✅ **Multi-Environment**: Dev, Staging, Production setups
-- ✅ **Deployment Strategies**: Rolling, Blue-Green, Canary
-
-### **Smart Features**
-- ✅ **OS Detection**: Automatically detects your operating system
-- ✅ **Auto-Installation**: Installs all required tools
-- ✅ **Environment Detection**: Automatically detects target environment
-- ✅ **Strategy Selection**: Chooses appropriate deployment strategy
-- ✅ **Health Checks**: Performs automatic health checks
-- ✅ **Rollback Support**: Easy rollback capabilities
-- ✅ **Scaling**: Easy scaling commands
-- ✅ **Monitoring**: Built-in monitoring and alerting
-
-### **Production Ready**
-- ✅ **High Availability**: Multi-replica deployments
-- ✅ **Auto-Scaling**: Horizontal Pod Autoscaler
-- ✅ **Resource Management**: CPU and memory limits
-- ✅ **Security Hardening**: Non-root containers, read-only filesystems
-- ✅ **Backup & Recovery**: Automated backup schedules
-- ✅ **Monitoring**: Comprehensive monitoring and alerting
-- ✅ **Logging**: Centralized logging
-- ✅ **Networking**: Service mesh ready
-
-## 🎯 Success Stories
-
-### **E-commerce Website**
-```bash
-# Challenge: Update online store without losing customers
-# Solution: Blue-Green deployment + monitoring
-./smart-deploy.sh -a ecommerce-store -e prod -s blue-green
-
-# Result: 99.9% uptime, customers never notice updates
-```
-
-### **Banking Application**
-```bash
-# Challenge: Secure, reliable financial transactions
-# Solution: Security scanning + automated testing + monitoring
-./smart-deploy.sh -a banking-app -e prod -s blue-green
-
-# Result: Zero security breaches, 24/7 availability
-```
-
-### **Mobile App Backend**
-```bash
-# Challenge: Handle millions of users, scale automatically
-# Solution: Auto-scaling + monitoring + multi-environment
-./smart-deploy.sh -a mobile-backend -e prod -s rolling
-
-# Result: Handles traffic spikes, always available
-```
-
-## 🎯 Next Steps
-
-### **1. Explore the Tools**
-- Access ArgoCD and configure Git repositories
-- Set up Jenkins pipelines for your applications
-- Configure monitoring dashboards in Grafana
-- Test backup and restore procedures
-
-### **2. Deploy Your Applications**
-- Use the sample applications as templates
-- Deploy your own applications using the smart scripts
-- Configure different environments (dev, staging, prod)
-- Test different deployment strategies
-
-### **3. Customize and Extend**
-- Add your own deployment scripts
-- Configure custom monitoring and alerting
-- Set up additional security scanning
-- Integrate with your existing tools
-
-### **4. Learn and Improve**
-- Read the detailed documentation in `docs/` directory
-- Experiment with different deployment strategies
-- Learn about Kubernetes and DevOps best practices
-- Contribute to the project
-
-## 🎯 Support and Help
-
-### **Documentation**
-- **README.md**: Main project documentation
-- **SETUP-README.md**: This setup guide
-- **docs/**: Detailed step-by-step guides
-- **Logs**: Check `setup.log` and `deploy.log` for detailed information
-
-### **Common Issues**
-- **Setup fails**: Check `setup.log` for detailed error information
-- **Deployment fails**: Check `deploy.log` and use `./smart-deploy.sh status`
-- **Can't access UIs**: Use port-forward commands provided
-- **Out of resources**: Scale down deployments or increase cluster resources
-
-### **Getting Help**
-- Check the logs for detailed error information
-- Use the `verify` and `status` commands to diagnose issues
-- Review the troubleshooting section above
-- Check the main README.md for additional information
-
-## 🎯 Conclusion
-
-The Smart DevOps Pipeline Setup provides:
-
-- ✅ **One-command setup** on any operating system
-- ✅ **Intelligent deployment** with auto-detection
-- ✅ **Production-ready** DevOps pipeline
-- ✅ **Multiple deployment strategies** for different needs
-- ✅ **Comprehensive monitoring** and observability
-- ✅ **Easy management** and troubleshooting
-
-**Start your DevOps journey today with just one command:**
-```bash
-./final-setup.sh
+[BACKUP] Creating backup: test-backup
+[INFO] Backing up namespace: sample-app-dev
+Backup request "test-backup" submitted successfully.
+[INFO] Backup test-backup completed successfully
+
+[BACKUP] Listing backups:
+NAME          STATUS    CREATED                         EXPIRES
+test-backup   Completed  2024-01-15 10:30:00 +0000 UTC   30d
+
+[RESTORE] Restoring backup: test-backup
+[INFO] Restoring namespace: sample-app-dev
+Restore request "test-backup" submitted successfully.
+[INFO] Restore test-backup completed successfully
 ```
 
 ---
 
-**🎉 Happy DevOps! 🚀**
+## 🎯 Quick Commands Reference
+
+### Daily Operations
+```bash
+# Check everything is running
+kubectl get pods --all-namespaces | grep -v Running
+
+# Restart a deployment
+kubectl rollout restart deployment/[deployment-name] -n [namespace]
+
+# Scale a deployment
+kubectl scale deployment [deployment-name] --replicas=3 -n [namespace]
+
+# Check resource usage
+kubectl top pods --all-namespaces
+
+# Get logs from a pod
+kubectl logs -f [pod-name] -n [namespace]
+
+# Execute command in pod
+kubectl exec -it [pod-name] -n [namespace] -- /bin/bash
+```
+
+### Troubleshooting Commands
+```bash
+# Check events
+kubectl get events --all-namespaces --sort-by='.lastTimestamp'
+
+# Describe a pod
+kubectl describe pod [pod-name] -n [namespace]
+
+# Check service endpoints
+kubectl get endpoints -n [namespace]
+
+# Check persistent volumes
+kubectl get pv,pvc --all-namespaces
+
+# Check secrets
+kubectl get secrets --all-namespaces
+```
+
+### Cleanup Commands
+```bash
+# Delete all resources in namespace
+kubectl delete all --all -n [namespace]
+
+# Delete namespace (removes everything)
+kubectl delete namespace [namespace]
+
+# Clean up completed jobs
+kubectl delete jobs --field-selector status.successful=1 --all-namespaces
+
+# Clean up failed pods
+kubectl delete pods --field-selector status.phase=Failed --all-namespaces
+```
+
+---
+
+## 🎉 Success! Your DevOps Pipeline is Ready
+
+### Access Your Tools:
+- **ArgoCD**: https://localhost:8080 (admin/[password])
+- **Jenkins**: http://localhost:8081 (admin/[password])
+- **SonarQube**: http://localhost:9000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000 (admin/admin)
+
+### For AWS EC2:
+Replace `localhost` with your EC2 public IP address.
+
+### Next Steps:
+1. Configure your Git repositories in ArgoCD
+2. Set up Jenkins pipelines for your applications
+3. Configure monitoring dashboards in Grafana
+4. Test backup and restore procedures with Velero
+5. Deploy your own applications using the sample templates
+
+---
+
+## 📞 Support
+
+If you encounter any issues:
+1. Check the troubleshooting section above
+2. Review the logs: `kubectl logs -n [namespace] [pod-name]`
+3. Check events: `kubectl get events --all-namespaces`
+4. Create an issue on GitHub
+
+**Happy DevOps! 🚀**

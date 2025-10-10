@@ -21,13 +21,26 @@ git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-p
 cd Complete-DevOps-Pipeline-Integration-project6
 ```
 
-### Step 2: Run Final Setup
+### Step 2: Run Complete Setup
 ```bash
-# Make script executable
-chmod +x final-setup.sh
+# Make scripts executable
+chmod +x *.sh
+chmod +x */*.sh
 
-# Run the final setup (works on all OS)
+# Run the complete deployment (works on all OS)
+./deploy-all.sh deploy
+```
+
+### Alternative: Step-by-Step Setup
+```bash
+# Run individual components
 ./final-setup.sh
+
+# Test everything works
+./test-pipeline.sh all
+
+# Check status
+./deploy-all.sh status
 ```
 
 **That's it!** The script will:
@@ -370,7 +383,10 @@ chmod +x *.sh
 chmod +x */*.sh
 
 # Step 3: Run the complete deployment
-./deploy-all.sh
+./deploy-all.sh deploy
+
+# Step 4: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Complete pipeline deployed in 5-10 minutes
 ```
@@ -381,11 +397,18 @@ chmod +x */*.sh
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 
-# Step 2: Install requirements (if not already installed)
-# Follow the "Required Software Installation" section above
+# Step 2: Make scripts executable
+chmod +x *.sh
+chmod +x */*.sh
 
-# Step 3: Deploy each component manually
-# Follow the "Manual Step-by-Step Deployment" section above
+# Step 3: Install requirements (if not already installed)
+./deploy-all.sh install-tools
+
+# Step 4: Deploy each component manually
+./final-setup.sh
+
+# Step 5: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Complete control over each component
 ```
@@ -401,7 +424,11 @@ cd Complete-DevOps-Pipeline-Integration-project6
 # Step 3: Clone and run
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
-./deploy-all.sh
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh deploy
+
+# Step 4: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Works on Windows and Mac without additional setup
 ```
@@ -421,7 +448,11 @@ cd Complete-DevOps-Pipeline-Integration-project6
 # Step 3: Clone and run
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
-./deploy-all.sh
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh deploy
+
+# Step 4: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Production-ready deployment on cloud
 ```
@@ -438,7 +469,11 @@ minikube start --memory=8192 --cpus=4 --driver=docker
 # Step 3: Clone and run
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
-./deploy-all.sh
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh deploy
+
+# Step 4: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Local Kubernetes cluster with full pipeline
 ```
@@ -456,7 +491,11 @@ kind create cluster --name devops-pipeline
 # Step 3: Clone and run
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
-./deploy-all.sh
+chmod +x *.sh && chmod +x */*.sh
+./deploy-all.sh deploy
+
+# Step 4: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Lightweight Kubernetes cluster
 ```
@@ -485,7 +524,10 @@ minikube start --memory=8192 --cpus=4 --driver=docker
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 chmod +x *.sh && chmod +x */*.sh
-./deploy-all.sh
+./deploy-all.sh deploy
+
+# Step 6: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Complete pipeline on RHEL 10
 ```
@@ -514,7 +556,10 @@ minikube start --memory=8192 --cpus=4 --driver=docker
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 chmod +x *.sh && chmod +x */*.sh
-./deploy-all.sh
+./deploy-all.sh deploy
+
+# Step 6: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Complete pipeline on Amazon Linux 2023
 ```
@@ -541,7 +586,10 @@ minikube start --memory=8192 --cpus=4 --driver=docker
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 # Note: Use Git Bash or WSL for shell scripts
-bash -c "chmod +x *.sh && chmod +x */*.sh && ./deploy-all.sh"
+bash -c "chmod +x *.sh && chmod +x */*.sh && ./deploy-all.sh deploy"
+
+# Step 6: Test everything works
+bash -c "./test-pipeline.sh all"
 
 # Expected Output: Complete pipeline on Windows
 ```
@@ -572,7 +620,10 @@ minikube start --memory=8192 --cpus=4 --driver=docker
 git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
 cd Complete-DevOps-Pipeline-Integration-project6
 chmod +x *.sh && chmod +x */*.sh
-./deploy-all.sh
+./deploy-all.sh deploy
+
+# Step 7: Test everything works
+./test-pipeline.sh all
 
 # Expected Output: Complete pipeline on Windows WSL2
 ```
@@ -582,7 +633,7 @@ chmod +x *.sh && chmod +x */*.sh
 ### One-Command Deployment
 ```bash
 # Deploy the complete DevOps pipeline
-./final-setup.sh
+./deploy-all.sh deploy
 ```
 
 **Complete Expected Output:**
@@ -864,6 +915,9 @@ Next Steps
 ```bash
 # Check if everything is running
 ./deploy-all.sh status
+
+# Test all components
+./test-pipeline.sh all
 ```
 
 **Expected Output:**
@@ -1577,6 +1631,29 @@ kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.spec.container
 ```
 
 ## 🚀 Quick Commands Reference
+
+### Pipeline Management
+```bash
+# Deploy complete pipeline
+./deploy-all.sh deploy
+
+# Check pipeline status
+./deploy-all.sh status
+
+# Test all components
+./test-pipeline.sh all
+
+# Test specific component
+./test-pipeline.sh argocd
+./test-pipeline.sh jenkins
+./test-pipeline.sh monitoring
+
+# Cleanup everything
+./deploy-all.sh cleanup
+
+# Install missing tools
+./deploy-all.sh install-tools
+```
 
 ### Daily Operations
 ```bash

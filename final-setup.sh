@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Final DevOps Pipeline Setup Script
-# Works on all operating systems with automatic detection and fixes
+# Complete DevOps Pipeline Integration - Final Setup Script
+# This script deploys the entire DevOps pipeline with all components
+# Supports: Linux, macOS, Windows (WSL2), AWS EC2
 
 set -e
 
@@ -16,16 +17,22 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_FILE="$SCRIPT_DIR/setup.log"
+TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
 # Function to print colored output
 print_header() {
-    echo -e "${PURPLE}================================${NC}"
-    echo -e "${PURPLE}$1${NC}"
-    echo -e "${PURPLE}================================${NC}"
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}================================${NC}"
 }
 
-print_status() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+print_step() {
+    echo -e "${CYAN}[STEP]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 print_warning() {
@@ -36,448 +43,480 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-print_step() {
-    echo -e "${BLUE}[STEP]${NC} $1"
+print_info() {
+    echo -e "${PURPLE}[INFO]${NC} $1"
 }
 
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+# Function to log messages
+log_message() {
+    echo "[$TIMESTAMP] $1" >> "$LOG_FILE"
 }
 
 # Function to detect OS
 detect_os() {
-    print_header "Detecting Operating System"
+    print_info "Detecting operating system..."
     
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        OS_TYPE="linux"
         if [ -f /etc/os-release ]; then
             . /etc/os-release
-            OS_DISTRO="$ID"
+            OS=$ID
+            VERSION=$VERSION_ID
         elif [ -f /etc/redhat-release ]; then
-            OS_DISTRO="rhel"
+            OS="rhel"
+            VERSION=$(cat /etc/redhat-release | grep -oE '[0-9]+' | head -1)
         elif [ -f /etc/debian_version ]; then
-            OS_DISTRO="debian"
+            OS="debian"
+            VERSION=$(cat /etc/debian_version)
         else
-            OS_DISTRO="unknown"
+            OS="linux"
         fi
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        OS_TYPE="macos"
-        OS_DISTRO="macos"
+        OS="macos"
+        VERSION=$(sw_vers -productVersion)
     elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
-        OS_TYPE="windows"
-        OS_DISTRO="windows"
+        OS="windows"
     else
-        OS_TYPE="unknown"
-        OS_DISTRO="unknown"
+        OS="unknown"
     fi
     
-    print_status "Detected: $OS_TYPE ($OS_DISTRO)"
-    print_success "OS Detection completed"
+    print_info "Detected OS: $OS $VERSION"
+    log_message "OS Detection: $OS $VERSION"
 }
 
-# Function to check system requirements
-check_requirements() {
-    print_header "Checking System Requirements"
-    
-    # Check memory
-    if [[ "$OS_TYPE" == "linux" ]]; then
-        local mem_gb=$(free -g | awk '/^Mem:/{print $2}')
-        print_status "Available RAM: ${mem_gb}GB"
-    elif [[ "$OS_TYPE" == "macos" ]]; then
-        local mem_gb=$(sysctl -n hw.memsize | awk '{print int($1/1024/1024/1024)}')
-        print_status "Available RAM: ${mem_gb}GB"
+# Function to detect AWS instance
+detect_aws() {
+    if curl -s --max-time 2 http://169.254.169.254/latest/meta-data/instance-id > /dev/null 2>&1; then
+        print_info "AWS EC2 Instance Detected"
+        INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
+        INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+        REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+        AZ=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+        
+        print_info "Instance Type: $INSTANCE_TYPE"
+        print_info "Instance ID: $INSTANCE_ID"
+        print_info "Region: $REGION"
+        print_info "Availability Zone: $AZ"
+        
+        log_message "AWS Detection: $INSTANCE_TYPE in $REGION"
+        return 0
+    else
+        return 1
     fi
-    
-    # Check disk space
-    local disk_space=$(df -h . | awk 'NR==2{print $4}')
-    print_status "Available disk space: $disk_space"
-    
-    # Check CPU cores
-    if [[ "$OS_TYPE" == "linux" ]]; then
-        local cpu_cores=$(nproc)
-        print_status "CPU cores: $cpu_cores"
-    elif [[ "$OS_TYPE" == "macos" ]]; then
-        local cpu_cores=$(sysctl -n hw.ncpu)
-        print_status "CPU cores: $cpu_cores"
-    fi
-    
-    print_success "System requirements check completed"
 }
 
-# Function to install prerequisites
-install_prerequisites() {
-    print_header "Installing Prerequisites"
+# Function to check prerequisites
+check_prerequisites() {
+    print_header "Checking Prerequisites"
     
-    if [[ "$OS_TYPE" == "linux" ]]; then
-        install_linux_prerequisites
-    elif [[ "$OS_TYPE" == "macos" ]]; then
-        install_macos_prerequisites
-    elif [[ "$OS_TYPE" == "windows" ]]; then
-        install_windows_prerequisites
+    local missing_tools=()
+    
+    # Check Docker
+    if ! command -v docker &> /dev/null; then
+        missing_tools+=("docker")
     else
-        print_error "Unsupported operating system: $OS_TYPE"
+        print_success "Docker is installed: $(docker --version)"
+    fi
+    
+    # Check kubectl
+    if ! command -v kubectl &> /dev/null; then
+        missing_tools+=("kubectl")
+    else
+        print_success "kubectl is installed: $(kubectl version --client --short)"
+    fi
+    
+    # Check Git
+    if ! command -v git &> /dev/null; then
+        missing_tools+=("git")
+    else
+        print_success "Git is installed: $(git --version)"
+    fi
+    
+    # Check if Kubernetes cluster is accessible
+    if ! kubectl cluster-info &> /dev/null; then
+        print_warning "Cannot connect to Kubernetes cluster"
+        print_info "Please ensure you have a Kubernetes cluster running (minikube, kind, or cloud cluster)"
+    else
+        print_success "Kubernetes cluster is accessible"
+    fi
+    
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        print_error "Missing required tools: ${missing_tools[*]}"
+        print_info "Please install the missing tools and run this script again"
         exit 1
     fi
+    
+    print_success "Prerequisites check passed"
+    log_message "Prerequisites check completed"
 }
 
-# Linux prerequisites installation
-install_linux_prerequisites() {
-    # Update package manager
-    if command -v dnf &> /dev/null; then
-        print_step "Updating packages (dnf)"
-        sudo dnf update -y
-        INSTALL_CMD="sudo dnf install -y"
-    elif command -v yum &> /dev/null; then
-        print_step "Updating packages (yum)"
-        sudo yum update -y
-        INSTALL_CMD="sudo yum install -y"
-    elif command -v apt &> /dev/null; then
-        print_step "Updating packages (apt)"
-        sudo apt update -y
-        INSTALL_CMD="sudo apt install -y"
-    elif command -v pacman &> /dev/null; then
-        print_step "Updating packages (pacman)"
-        sudo pacman -Syu --noconfirm
-        INSTALL_CMD="sudo pacman -S --noconfirm"
-    else
-        print_warning "No supported package manager found"
-        INSTALL_CMD="echo 'Please install packages manually'"
-    fi
+# Function to create namespaces
+create_namespaces() {
+    print_header "Creating Namespaces"
     
-    # Install basic tools (handle curl conflict on Amazon Linux)
-    print_step "Installing basic tools"
-    if [[ "$OS_DISTRO" == "amzn" ]]; then
-        print_step "Handling curl conflict on Amazon Linux"
-        $INSTALL_CMD wget git unzip conntrack-tools socat --allowerasing || {
-            print_warning "Some packages failed to install, trying alternative approach"
-            $INSTALL_CMD wget git unzip conntrack-tools socat --skip-broken
-        }
-        
-        # Check if curl is already available
-        if ! command -v curl &> /dev/null; then
-            print_step "Installing curl (replacing curl-minimal)"
-            $INSTALL_CMD curl --allowerasing || {
-                print_warning "curl installation failed, trying alternative approach"
-                $INSTALL_CMD curl --skip-broken
-            }
-        else
-            print_status "curl is already available"
-        fi
-    else
-        $INSTALL_CMD curl wget git unzip conntrack-tools socat || true
-    fi
+    local namespaces=("argocd" "jenkins" "sonarqube" "security" "monitoring" "velero")
     
-    # Install Docker
-    print_step "Installing Docker"
-    if ! command -v docker &> /dev/null; then
-        if command -v dnf &> /dev/null; then
-            $INSTALL_CMD docker
-        elif command -v yum &> /dev/null; then
-            $INSTALL_CMD docker
-        elif command -v apt &> /dev/null; then
-            $INSTALL_CMD docker.io
-        fi
-        sudo systemctl enable docker
-        sudo systemctl start docker
-        sudo usermod -aG docker $USER
-    else
-        print_status "Docker already installed"
-    fi
+    for namespace in "${namespaces[@]}"; do
+        print_step "Creating namespace: $namespace"
+        kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
+        log_message "Namespace $namespace created"
+    done
     
-    # Install kubectl
-    print_step "Installing kubectl"
-    if ! command -v kubectl &> /dev/null; then
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-        rm kubectl
-    else
-        print_status "kubectl already installed"
-    fi
-    
-    # Install Minikube with fallback methods
-    print_step "Installing Minikube"
-    if ! command -v minikube &> /dev/null; then
-        # Method 1: Direct download
-        if curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64; then
-            sudo install minikube-linux-amd64 /usr/local/bin/minikube
-            rm minikube-linux-amd64
-        # Method 2: wget fallback
-        elif wget -O /tmp/minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64; then
-            sudo mv /tmp/minikube /usr/local/bin/minikube
-            sudo chmod +x /usr/local/bin/minikube
-        # Method 3: Package manager
-        else
-            $INSTALL_CMD minikube || print_warning "Minikube installation failed, continuing..."
-        fi
-    else
-        print_status "Minikube already installed"
-    fi
-    
-    # Install Helm
-    print_step "Installing Helm"
-    if ! command -v helm &> /dev/null; then
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-    else
-        print_status "Helm already installed"
-    fi
-    
-    # Install ArgoCD CLI
-    print_step "Installing ArgoCD CLI"
-    if ! command -v argocd &> /dev/null; then
-        curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-        chmod +x /usr/local/bin/argocd
-    else
-        print_status "ArgoCD CLI already installed"
-    fi
-    
-    # Install Velero CLI
-    print_step "Installing Velero CLI"
-    if ! command -v velero &> /dev/null; then
-        curl -fsSL -o velero-v1.11.1-linux-amd64.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.11.1/velero-v1.11.1-linux-amd64.tar.gz
-        tar -xzf velero-v1.11.1-linux-amd64.tar.gz
-        sudo mv velero-v1.11.1-linux-amd64/velero /usr/local/bin/
-        rm -rf velero-v1.11.1-linux-amd64.tar.gz velero-v1.11.1-linux-amd64/
-    else
-        print_status "Velero CLI already installed"
-    fi
-    
-    print_success "Linux prerequisites installed"
+    print_success "All namespaces created"
 }
 
-# macOS prerequisites installation
-install_macos_prerequisites() {
-    # Check if Homebrew is installed
-    if ! command -v brew &> /dev/null; then
-        print_step "Installing Homebrew"
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
+# Function to deploy ArgoCD
+deploy_argocd() {
+    print_header "Deploying ArgoCD (GitOps)"
     
-    # Install tools
-    print_step "Installing tools via Homebrew"
-    brew install curl wget git kubectl minikube helm argocd velero
-    
-    print_success "macOS prerequisites installed"
-}
-
-# Windows prerequisites installation
-install_windows_prerequisites() {
-    print_step "Installing Windows prerequisites"
-    
-    print_warning "Windows installation requires PowerShell"
-    print_status "Please run the following commands in PowerShell as Administrator:"
-    echo ""
-    echo "Set-ExecutionPolicy Bypass -Scope Process -Force"
-    echo "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072"
-    echo "iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-    echo "choco install -y docker-desktop kubernetes-cli minikube kubernetes-helm argocd velero"
-    echo ""
-    print_warning "After installation, restart your terminal and run this script again"
-}
-
-# Function to setup Kubernetes cluster
-setup_kubernetes() {
-    print_header "Setting up Kubernetes Cluster"
-    
-    if [[ "$OS_TYPE" == "linux" ]]; then
-        setup_linux_kubernetes
-    elif [[ "$OS_TYPE" == "macos" ]]; then
-        setup_macos_kubernetes
-    elif [[ "$OS_TYPE" == "windows" ]]; then
-        setup_windows_kubernetes
-    fi
-}
-
-# Linux Kubernetes setup
-setup_linux_kubernetes() {
-    # Start Docker if not running
-    if ! sudo systemctl is-active --quiet docker; then
-        print_step "Starting Docker service"
-        sudo systemctl start docker
-    fi
-    
-    # Start Minikube with fallback methods
-    print_step "Starting Minikube"
-    if ! minikube status &> /dev/null; then
-        # Check if minikube cluster exists and delete if driver mismatch
-        if minikube profile list &> /dev/null; then
-            print_step "Cleaning up existing minikube cluster"
-            minikube delete || true
-        fi
-        
-        # Try different drivers
-        if [[ "$EUID" -eq 0 ]]; then
-            # Running as root (common on AWS instances)
-            print_step "Starting Minikube as root user"
-            if minikube start --driver=docker --force --memory=2048 --cpus=2; then
-                print_success "Minikube started with docker driver"
-            elif minikube start --driver=none --force; then
-                print_success "Minikube started with none driver"
-            else
-                print_warning "Minikube start failed, trying with minimal resources"
-                minikube start --driver=docker --force --memory=1024 --cpus=1 || print_error "Minikube start failed"
-            fi
-        else
-            # Running as regular user
-            print_step "Starting Minikube as regular user"
-            if minikube start --driver=docker; then
-                print_success "Minikube started with docker driver"
-            elif minikube start --driver=none; then
-                print_success "Minikube started with none driver"
-            else
-                print_warning "Minikube start failed, trying with reduced resources"
-                minikube start --driver=docker --memory=2048 --cpus=2 || print_error "Minikube start failed"
-            fi
-        fi
-    else
-        print_status "Minikube already running"
-    fi
-    
-    # Wait for cluster to be ready
-    print_step "Waiting for cluster to be ready"
-    kubectl wait --for=condition=Ready nodes --all --timeout=300s || print_warning "Cluster readiness check failed"
-    
-    print_success "Kubernetes cluster setup completed"
-}
-
-# macOS Kubernetes setup
-setup_macos_kubernetes() {
-    # Start Docker Desktop
-    if ! docker info &> /dev/null; then
-        print_step "Starting Docker Desktop"
-        open -a Docker
-        sleep 30
-    fi
-    
-    # Start Minikube
-    print_step "Starting Minikube"
-    if ! minikube status &> /dev/null; then
-        minikube start --driver=docker
-    fi
-    
-    # Wait for cluster to be ready
-    print_step "Waiting for cluster to be ready"
-    kubectl wait --for=condition=Ready nodes --all --timeout=300s || print_warning "Cluster readiness check failed"
-    
-    print_success "Kubernetes cluster setup completed"
-}
-
-# Windows Kubernetes setup
-setup_windows_kubernetes() {
-    print_step "Starting Docker Desktop"
-    # Docker Desktop should be started manually
-    
-    print_step "Starting Minikube"
-    if ! minikube status &> /dev/null; then
-        minikube start --driver=docker
-    fi
-    
-    # Wait for cluster to be ready
-    print_step "Waiting for cluster to be ready"
-    kubectl wait --for=condition=Ready nodes --all --timeout=300s || print_warning "Cluster readiness check failed"
-    
-    print_success "Kubernetes cluster setup completed"
-}
-
-# Function to deploy DevOps pipeline
-deploy_pipeline() {
-    print_header "Deploying DevOps Pipeline"
-    
-    # Deploy ArgoCD
-    print_step "Deploying ArgoCD"
-    kubectl create namespace argocd || true
+    print_step "Installing ArgoCD"
     kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-    kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd || print_warning "ArgoCD deployment timeout"
     
-    # Deploy Jenkins
-    print_step "Deploying Jenkins"
-    kubectl create namespace jenkins || true
+    print_step "Waiting for ArgoCD to be ready"
+    kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd || print_warning "ArgoCD server wait failed, continuing..."
+    kubectl wait --for=condition=available --timeout=300s statefulset/argocd-application-controller -n argocd || print_warning "ArgoCD application controller wait failed, continuing..."
+    kubectl wait --for=condition=available --timeout=300s deployment/argocd-repo-server -n argocd || print_warning "ArgoCD repo server wait failed, continuing..."
     
-    # Deploy Jenkins using Helm (more reliable)
-    helm repo add jenkins https://charts.jenkins.io || print_warning "Jenkins Helm repo failed"
-    helm repo update || print_warning "Helm repo update failed"
-    helm install jenkins jenkins/jenkins --namespace jenkins \
-        --set controller.serviceType=NodePort \
-        --set controller.servicePort=8080 \
-        --set persistence.enabled=false \
-        --set controller.adminUser=admin \
-        --set controller.adminPassword=admin123 || print_warning "Jenkins Helm install failed"
+    print_step "Configuring ArgoCD server for external access"
+    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}' || print_warning "ArgoCD service patch failed, continuing..."
     
-    kubectl wait --for=condition=available --timeout=600s deployment/jenkins -n jenkins || print_warning "Jenkins deployment timeout"
+    print_success "ArgoCD deployed successfully"
+    log_message "ArgoCD deployment completed"
+}
+
+# Function to deploy Jenkins
+deploy_jenkins() {
+    print_header "Deploying Jenkins (CI/CD)"
     
-    # Deploy SonarQube
-    print_step "Deploying SonarQube"
-    kubectl create namespace sonarqube || true
-    # Use Helm for SonarQube instead of direct YAML
-    helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || print_warning "SonarQube Helm repo failed"
-    helm repo update || print_warning "Helm repo update failed"
-    helm install sonarqube sonarqube/sonarqube --namespace sonarqube --set service.type=NodePort || print_warning "SonarQube Helm install failed"
-    kubectl wait --for=condition=available --timeout=600s deployment/sonarqube-sonarqube -n sonarqube || print_warning "SonarQube deployment timeout"
+    print_step "Installing Jenkins"
+    kubectl apply -f "$SCRIPT_DIR/jenkins/jenkins-deployment.yaml"
     
-    # Deploy Prometheus and Grafana
-    print_step "Deploying Prometheus and Grafana"
-    kubectl create namespace monitoring || true
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo update
-    helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring
-    kubectl wait --for=condition=available --timeout=600s deployment/prometheus-operator -n monitoring || print_warning "Prometheus deployment timeout"
+    print_step "Waiting for Jenkins to be ready"
+    kubectl wait --for=condition=available --timeout=300s deployment/jenkins -n jenkins || print_warning "Jenkins deployment wait failed, continuing..."
     
-    # Deploy Velero
-    print_step "Deploying Velero"
-    kubectl create namespace velero || true
+    print_success "Jenkins deployed successfully"
+    log_message "Jenkins deployment completed"
+}
+
+# Function to deploy SonarQube
+deploy_sonarqube() {
+    print_header "Deploying SonarQube (Code Quality)"
+    
+    print_step "Installing SonarQube"
+    kubectl apply -f "$SCRIPT_DIR/security/sonarqube-deployment.yaml"
+    
+    print_step "Waiting for SonarQube to be ready"
+    kubectl wait --for=condition=available --timeout=300s deployment/sonarqube -n sonarqube || print_warning "SonarQube deployment wait failed, continuing..."
+    kubectl wait --for=condition=available --timeout=300s deployment/postgresql -n sonarqube || print_warning "PostgreSQL deployment wait failed, continuing..."
+    
+    print_success "SonarQube deployed successfully"
+    log_message "SonarQube deployment completed"
+}
+
+# Function to deploy Trivy
+deploy_trivy() {
+    print_header "Deploying Trivy (Security Scanning)"
+    
+    print_step "Installing Trivy scanning jobs"
+    kubectl apply -f "$SCRIPT_DIR/security/trivy-scan-job.yaml"
+    
+    print_success "Trivy deployed successfully"
+    log_message "Trivy deployment completed"
+}
+
+# Function to deploy monitoring stack
+deploy_monitoring() {
+    print_header "Deploying Monitoring Stack"
+    
+    print_step "Installing Prometheus"
+    kubectl apply -f "$SCRIPT_DIR/monitoring/prometheus-deployment.yaml"
+    
+    print_step "Installing Grafana"
+    kubectl apply -f "$SCRIPT_DIR/monitoring/grafana-deployment.yaml"
+    
+    print_step "Waiting for monitoring stack to be ready"
+    kubectl wait --for=condition=available --timeout=300s deployment/prometheus -n monitoring || print_warning "Prometheus deployment wait failed, continuing..."
+    kubectl wait --for=condition=available --timeout=300s deployment/grafana -n monitoring || print_warning "Grafana deployment wait failed, continuing..."
+    
+    print_success "Monitoring stack deployed successfully"
+    log_message "Monitoring stack deployment completed"
+}
+
+# Function to deploy Velero
+deploy_velero() {
+    print_header "Deploying Velero (Backup & DR)"
+    
+    print_step "Installing Velero CRDs first"
     kubectl apply -f "$SCRIPT_DIR/backup/velero-install.yaml"
-    kubectl wait --for condition=established --timeout=60s crd/backups.velero.io || print_warning "Velero CRD wait failed"
-    kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io || print_warning "Velero CRD wait failed"
-    kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io || print_warning "Velero CRD wait failed"
-    kubectl apply -f "$SCRIPT_DIR/backup/backup-schedule.yaml"
-    kubectl wait --for=condition=available --timeout=600s deployment/velero -n velero || print_warning "Velero deployment timeout"
     
-    print_success "DevOps pipeline deployed successfully"
+    print_step "Waiting for CRDs to be established"
+    kubectl wait --for condition=established --timeout=60s crd/backups.velero.io || print_warning "Velero CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io || print_warning "Velero CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/restores.velero.io || print_warning "Velero CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/schedules.velero.io || print_warning "Velero CRD wait failed, continuing..."
+    kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io || print_warning "Velero CRD wait failed, continuing..."
+    
+    print_step "Installing backup schedules"
+    kubectl apply -f "$SCRIPT_DIR/backup/backup-schedule.yaml"
+    
+    print_step "Waiting for Velero to be ready"
+    kubectl wait --for=condition=available --timeout=300s deployment/velero -n velero || print_warning "Velero deployment wait failed, continuing..."
+    
+    print_success "Velero deployed successfully"
+    log_message "Velero deployment completed"
+}
+
+# Function to deploy sample applications
+deploy_sample_apps() {
+    print_header "Deploying Sample Applications"
+    
+    print_step "Deploying to Development environment"
+    kubectl apply -k "$SCRIPT_DIR/environments/dev/" || print_warning "Dev environment deployment failed, continuing..."
+    
+    print_step "Deploying to Staging environment"
+    kubectl apply -k "$SCRIPT_DIR/environments/staging/" || print_warning "Staging environment deployment failed, continuing..."
+    
+    print_step "Deploying to Production environment"
+    kubectl apply -k "$SCRIPT_DIR/environments/prod/" || print_warning "Production environment deployment failed, continuing..."
+    
+    print_step "Deploying Blue-Green setup"
+    kubectl apply -f "$SCRIPT_DIR/blue-green/blue-deployment.yaml" || print_warning "Blue deployment failed, continuing..."
+    kubectl apply -f "$SCRIPT_DIR/blue-green/green-deployment.yaml" || print_warning "Green deployment failed, continuing..."
+    
+    print_success "Sample applications deployed successfully"
+    log_message "Sample applications deployment completed"
+}
+
+# Function to deploy ArgoCD applications
+deploy_argocd_apps() {
+    print_header "Deploying ArgoCD Applications"
+    
+    print_step "Creating ArgoCD applications"
+    kubectl apply -f "$SCRIPT_DIR/argocd/sample-application.yaml" || print_warning "ArgoCD application deployment failed, continuing..."
+    
+    print_success "ArgoCD applications deployed successfully"
+    log_message "ArgoCD applications deployment completed"
 }
 
 # Function to show access information
 show_access_info() {
-    print_header "Access Information"
+    print_header "Deployment Completed Successfully!"
     
-    echo -e "${CYAN}🔗 ArgoCD:${NC}"
-    echo "  URL: https://$(minikube ip):$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}')"
-    echo "  Username: admin"
-    echo "  Password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)"
+    echo ""
+    print_info "🔗 ArgoCD UI:"
+    echo "   URL: https://localhost:8080"
+    echo "   Username: admin"
+    echo "   Password: Check ArgoCD namespace for initial admin secret"
     
-    echo -e "${CYAN}🔗 Jenkins:${NC}"
-    echo "  URL: http://$(minikube ip):$(kubectl get svc jenkins -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')"
-    echo "  Username: admin"
-    echo "  Password: admin123"
+    echo ""
+    print_info "🔗 Jenkins UI:"
+    echo "   URL: http://localhost:8081"
+    echo "   Username: admin"
+    echo "   Password: Check Jenkins namespace for initial admin password"
     
-    echo -e "${CYAN}🔗 SonarQube:${NC}"
-    echo "  URL: http://$(minikube ip):$(kubectl get svc sonarqube-sonarqube -n sonarqube -o jsonpath='{.spec.ports[0].nodePort}')"
-    echo "  Username: admin"
-    echo "  Password: admin"
+    echo ""
+    print_info "🔗 SonarQube UI:"
+    echo "   URL: http://localhost:9000"
+    echo "   Username: admin"
+    echo "   Password: admin"
     
-    echo -e "${CYAN}🔗 Grafana:${NC}"
-    echo "  URL: http://$(minikube ip):$(kubectl get svc prometheus-grafana -n monitoring -o jsonpath='{.spec.ports[0].nodePort}')"
-    echo "  Username: admin"
-    echo "  Password: $(kubectl get secret prometheus-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d)"
+    echo ""
+    print_info "🔗 Prometheus UI:"
+    echo "   URL: http://localhost:9090"
     
-    echo -e "${CYAN}🔗 Prometheus:${NC}"
-    echo "  URL: http://$(minikube ip):$(kubectl get svc prometheus-kube-prometheus-prometheus -n monitoring -o jsonpath='{.spec.ports[0].nodePort}')"
+    echo ""
+    print_info "🔗 Grafana UI:"
+    echo "   URL: http://localhost:3000"
+    echo "   Username: admin"
+    echo "   Password: admin"
     
-    print_success "Setup completed successfully!"
+    echo ""
+    print_warning "If using port-forward, run these commands:"
+    echo "   kubectl port-forward svc/argocd-server -n argocd 8080:443"
+    echo "   kubectl port-forward svc/jenkins -n jenkins 8081:8080"
+    echo "   kubectl port-forward svc/sonarqube -n sonarqube 9000:9000"
+    echo "   kubectl port-forward svc/prometheus -n monitoring 9090:9090"
+    echo "   kubectl port-forward svc/grafana -n monitoring 3000:3000"
+    
+    # Show AWS-specific information if detected
+    if detect_aws; then
+        echo ""
+        print_info "🔗 For AWS EC2, replace localhost with your EC2 public IP:"
+        echo "   ArgoCD: https://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080"
+        echo "   Jenkins: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8081"
+        echo "   SonarQube: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):9000"
+        echo "   Prometheus: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):9090"
+        echo "   Grafana: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000"
+    fi
 }
 
-# Main execution
-main() {
-    print_header "Final DevOps Pipeline Setup"
-    print_status "Starting automated setup for $OS_TYPE"
+# Function to show next steps
+show_next_steps() {
+    print_header "Next Steps"
+    
+    echo ""
+    print_info "🎉 Setup completed successfully!"
+    
+    echo ""
+    print_info "📚 What you can do now:"
+    echo "   1. Access the web UIs using the information above"
+    echo "   2. Configure your Git repositories in ArgoCD"
+    echo "   3. Set up Jenkins pipelines for your applications"
+    echo "   4. Configure monitoring dashboards in Grafana"
+    echo "   5. Test backup and restore procedures with Velero"
+    echo "   6. Deploy your own applications using the sample templates"
+    
+    echo ""
+    print_info "📖 For detailed instructions, see:"
+    echo "   - README.md (main documentation)"
+    echo "   - docs/ directory (step-by-step guides)"
+    
+    echo ""
+    print_info "🛠️ Useful commands:"
+    echo "   - Check status: ./final-setup.sh status"
+    echo "   - Blue-green deployment: ./blue-green/blue-green-script.sh deploy"
+    echo "   - Create backup: ./backup/backup-script.sh create my-backup sample-app-dev"
+    echo "   - Cleanup: ./final-setup.sh cleanup"
+    
+    echo ""
+    print_info "📝 Setup log saved to: $LOG_FILE"
+}
+
+# Function to show status
+show_status() {
+    print_header "Deployment Status"
+    
+    print_info "📊 Namespace Status:"
+    kubectl get namespaces | grep -E "(argocd|jenkins|sonarqube|security|monitoring|velero)" || print_warning "Some namespaces not found"
+    
+    echo ""
+    print_info "🚀 Application Status:"
+    kubectl get pods --all-namespaces | grep -E "(argocd|jenkins|sonarqube|monitoring|velero|sample-app)" || print_warning "Some applications not found"
+    
+    echo ""
+    print_info "📈 Monitoring Status:"
+    kubectl get pods -n monitoring || print_warning "Monitoring pods not found"
+    
+    echo ""
+    print_info "🔒 Security Status:"
+    kubectl get pods -n sonarqube || print_warning "SonarQube pods not found"
+    kubectl get pods -n security || print_warning "Security pods not found"
+}
+
+# Function to cleanup
+cleanup() {
+    print_header "Cleanup"
+    
+    print_warning "This will delete all deployed resources"
+    read -p "Are you sure you want to continue? (y/N): " -n 1 -r
+    echo
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_step "Deleting all namespaces..."
+        kubectl delete namespace argocd jenkins sonarqube security monitoring velero sample-app-dev sample-app-staging sample-app-prod || print_warning "Some namespaces not found"
+        
+        print_success "Cleanup completed"
+        log_message "Cleanup completed"
+    else
+        print_info "Cleanup cancelled"
+    fi
+}
+
+# Function to install missing tools
+install_tools() {
+    print_header "Installing Missing Tools"
     
     detect_os
-    check_requirements
-    install_prerequisites
-    setup_kubernetes
-    deploy_pipeline
-    show_access_info
     
-    print_header "Setup Complete!"
-    print_success "Your DevOps pipeline is ready to use!"
+    case $OS in
+        ubuntu|debian)
+            print_step "Installing tools for Ubuntu/Debian..."
+            sudo apt update
+            sudo apt install -y docker.io kubectl git curl wget
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker $USER
+            ;;
+        rhel|centos|amazon)
+            print_step "Installing tools for RHEL/CentOS/Amazon Linux..."
+            sudo dnf update -y
+            sudo dnf install -y docker kubectl git curl wget
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker $USER
+            ;;
+        macos)
+            print_step "Installing tools for macOS..."
+            if ! command -v brew &> /dev/null; then
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+            brew install docker kubectl git
+            ;;
+        *)
+            print_error "Unsupported OS: $OS"
+            exit 1
+            ;;
+    esac
+    
+    print_success "Tools installation completed"
+    log_message "Tools installation completed for $OS"
+}
+
+# Main function
+main() {
+    # Initialize log file
+    echo "DevOps Pipeline Setup Log - $TIMESTAMP" > "$LOG_FILE"
+    
+    print_header "Complete DevOps Pipeline Integration Deployment"
+    
+    # Detect OS and AWS
+    detect_os
+    detect_aws
+    
+    # Check command line arguments
+    case "${1:-}" in
+        status)
+            show_status
+            exit 0
+            ;;
+        cleanup)
+            cleanup
+            exit 0
+            ;;
+        install-tools)
+            install_tools
+            exit 0
+            ;;
+        help|--help|-h)
+            echo "Usage: $0 [status|cleanup|install-tools]"
+            echo ""
+            echo "Commands:"
+            echo "  (no args)     - Deploy complete DevOps pipeline"
+            echo "  status        - Show deployment status"
+            echo "  cleanup       - Remove all deployed resources"
+            echo "  install-tools - Install required tools"
+            echo "  help          - Show this help message"
+            exit 0
+            ;;
+    esac
+    
+    # Main deployment process
+    check_prerequisites
+    create_namespaces
+    deploy_argocd
+    deploy_jenkins
+    deploy_sonarqube
+    deploy_trivy
+    deploy_monitoring
+    deploy_velero
+    deploy_sample_apps
+    deploy_argocd_apps
+    show_access_info
+    show_next_steps
+    
+    print_success "🎉 Complete DevOps Pipeline setup finished successfully!"
+    print_info "Setup log: $LOG_FILE"
+    
+    log_message "Setup completed successfully"
 }
 
 # Run main function
