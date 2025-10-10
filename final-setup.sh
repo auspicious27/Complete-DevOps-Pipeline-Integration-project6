@@ -306,15 +306,15 @@ setup_linux_kubernetes() {
         
         # Try different drivers
         if [[ "$EUID" -eq 0 ]]; then
-            # Running as root
+            # Running as root (common on AWS instances)
             print_step "Starting Minikube as root user"
-            if minikube start --driver=docker --force; then
+            if minikube start --driver=docker --force --memory=2048 --cpus=2; then
                 print_success "Minikube started with docker driver"
             elif minikube start --driver=none --force; then
                 print_success "Minikube started with none driver"
             else
-                print_warning "Minikube start failed, trying with reduced resources"
-                minikube start --driver=docker --force --memory=2048 --cpus=2 || print_error "Minikube start failed"
+                print_warning "Minikube start failed, trying with minimal resources"
+                minikube start --driver=docker --force --memory=1024 --cpus=1 || print_error "Minikube start failed"
             fi
         else
             # Running as regular user
@@ -391,56 +391,26 @@ deploy_pipeline() {
     # Deploy Jenkins
     print_step "Deploying Jenkins"
     kubectl create namespace jenkins || true
-    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/crds/jenkins.io_jenkins_crd.yaml || print_warning "Jenkins CRD failed"
-    kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-operator/master/deploy/all-in-one-v1alpha2.yaml || print_warning "Jenkins operator failed"
     
-    # Wait for Jenkins operator deployment
-    print_step "Waiting for Jenkins operator"
-    kubectl wait --for=condition=available --timeout=600s deployment/jenkins-operator -n jenkins || print_warning "Jenkins operator deployment timeout"
+    # Deploy Jenkins using Helm (more reliable)
+    helm repo add jenkins https://charts.jenkins.io || print_warning "Jenkins Helm repo failed"
+    helm repo update || print_warning "Helm repo update failed"
+    helm install jenkins jenkins/jenkins --namespace jenkins \
+        --set controller.serviceType=NodePort \
+        --set controller.servicePort=8080 \
+        --set persistence.enabled=false \
+        --set controller.adminUser=admin \
+        --set controller.adminPassword=admin123 || print_warning "Jenkins Helm install failed"
     
-    # Create a simple Jenkins instance
-    print_step "Creating Jenkins instance"
-    cat <<EOF | kubectl apply -f -
-apiVersion: jenkins.io/v1alpha2
-kind: Jenkins
-metadata:
-  name: jenkins
-  namespace: jenkins
-spec:
-  master:
-    containers:
-    - name: jenkins-master
-      image: jenkins/jenkins:lts
-      imagePullPolicy: Always
-      ports:
-      - containerPort: 8080
-        protocol: TCP
-      - containerPort: 50000
-        protocol: TCP
-      resources:
-        limits:
-          memory: 2Gi
-          cpu: 1000m
-        requests:
-          memory: 1Gi
-          cpu: 500m
-    serviceType: NodePort
-EOF
-    kubectl wait --for=condition=available --timeout=600s deployment/jenkins -n jenkins || print_warning "Jenkins instance deployment timeout"
+    kubectl wait --for=condition=available --timeout=600s deployment/jenkins -n jenkins || print_warning "Jenkins deployment timeout"
     
     # Deploy SonarQube
     print_step "Deploying SonarQube"
     kubectl create namespace sonarqube || true
-    # Use Helm for SonarQube with proper configuration
+    # Use Helm for SonarQube instead of direct YAML
     helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || print_warning "SonarQube Helm repo failed"
     helm repo update || print_warning "Helm repo update failed"
-    helm install sonarqube sonarqube/sonarqube --namespace sonarqube \
-        --set service.type=NodePort \
-        --set monitoringPasscode=admin123 \
-        --set postgresql.enabled=true \
-        --set postgresql.auth.postgresPassword=sonar123 \
-        --set postgresql.auth.username=sonar \
-        --set postgresql.auth.password=sonar123 || print_warning "SonarQube Helm install failed"
+    helm install sonarqube sonarqube/sonarqube --namespace sonarqube --set service.type=NodePort || print_warning "SonarQube Helm install failed"
     kubectl wait --for=condition=available --timeout=600s deployment/sonarqube-sonarqube -n sonarqube || print_warning "SonarQube deployment timeout"
     
     # Deploy Prometheus and Grafana
@@ -448,33 +418,17 @@ EOF
     kubectl create namespace monitoring || true
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
     helm repo update
-    helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring \
-        --set grafana.service.type=NodePort \
-        --set prometheus.service.type=NodePort
-    kubectl wait --for=condition=available --timeout=600s deployment/prometheus-grafana -n monitoring || print_warning "Grafana deployment timeout"
+    helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring
+    kubectl wait --for=condition=available --timeout=600s deployment/prometheus-operator -n monitoring || print_warning "Prometheus deployment timeout"
     
     # Deploy Velero
     print_step "Deploying Velero"
     kubectl create namespace velero || true
-    
-    # Apply Velero CRDs first
-    print_step "Installing Velero CRDs"
     kubectl apply -f "$SCRIPT_DIR/backup/velero-install.yaml"
-    
-    # Wait for CRDs to be established
-    print_step "Waiting for CRDs to be established"
-    kubectl wait --for condition=established --timeout=60s crd/backups.velero.io || print_warning "Backup CRD wait failed, continuing..."
-    kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io || print_warning "BackupStorageLocation CRD wait failed, continuing..."
-    kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io || print_warning "VolumeSnapshotLocation CRD wait failed, continuing..."
-    kubectl wait --for condition=established --timeout=60s crd/restores.velero.io || print_warning "Restore CRD wait failed, continuing..."
-    kubectl wait --for condition=established --timeout=60s crd/schedules.velero.io || print_warning "Schedule CRD wait failed, continuing..."
-    
-    # Apply backup schedules
-    print_step "Installing backup schedules"
-    kubectl apply -f "$SCRIPT_DIR/backup/backup-schedule.yaml" || print_warning "Backup schedule failed, continuing..."
-    
-    # Wait for Velero deployment
-    print_step "Waiting for Velero to be ready"
+    kubectl wait --for condition=established --timeout=60s crd/backups.velero.io || print_warning "Velero CRD wait failed"
+    kubectl wait --for condition=established --timeout=60s crd/backupstoragelocations.velero.io || print_warning "Velero CRD wait failed"
+    kubectl wait --for condition=established --timeout=60s crd/volumesnapshotlocations.velero.io || print_warning "Velero CRD wait failed"
+    kubectl apply -f "$SCRIPT_DIR/backup/backup-schedule.yaml"
     kubectl wait --for=condition=available --timeout=600s deployment/velero -n velero || print_warning "Velero deployment timeout"
     
     print_success "DevOps pipeline deployed successfully"
@@ -491,9 +445,13 @@ show_access_info() {
     
     echo -e "${CYAN}🔗 Jenkins:${NC}"
     echo "  URL: http://$(minikube ip):$(kubectl get svc jenkins -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')"
+    echo "  Username: admin"
+    echo "  Password: admin123"
     
     echo -e "${CYAN}🔗 SonarQube:${NC}"
     echo "  URL: http://$(minikube ip):$(kubectl get svc sonarqube-sonarqube -n sonarqube -o jsonpath='{.spec.ports[0].nodePort}')"
+    echo "  Username: admin"
+    echo "  Password: admin"
     
     echo -e "${CYAN}🔗 Grafana:${NC}"
     echo "  URL: http://$(minikube ip):$(kubectl get svc prometheus-grafana -n monitoring -o jsonpath='{.spec.ports[0].nodePort}')"
