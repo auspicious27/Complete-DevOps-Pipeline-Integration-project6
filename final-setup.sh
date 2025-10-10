@@ -244,19 +244,15 @@ install_macos_prerequisites() {
 install_windows_prerequisites() {
     print_step "Installing Windows prerequisites"
     
-    # Check if Chocolatey is installed
-    if ! command -v choco &> /dev/null; then
-        print_step "Installing Chocolatey"
-        Set-ExecutionPolicy Bypass -Scope Process -Force
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    fi
-    
-    # Install tools
-    choco install -y docker-desktop kubernetes-cli minikube kubernetes-helm argocd velero
-    
-    print_success "Windows prerequisites installed"
-    print_warning "Please restart your terminal after installation"
+    print_warning "Windows installation requires PowerShell"
+    print_status "Please run the following commands in PowerShell as Administrator:"
+    echo ""
+    echo "Set-ExecutionPolicy Bypass -Scope Process -Force"
+    echo "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072"
+    echo "iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+    echo "choco install -y docker-desktop kubernetes-cli minikube kubernetes-helm argocd velero"
+    echo ""
+    print_warning "After installation, restart your terminal and run this script again"
 }
 
 # Function to setup Kubernetes cluster

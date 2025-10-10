@@ -548,7 +548,7 @@ chmod +x *.sh && chmod +x */*.sh
 ### One-Command Deployment
 ```bash
 # Deploy the complete DevOps pipeline
-./deploy-all.sh
+./final-setup.sh
 ```
 
 **Complete Expected Output:**
@@ -1080,7 +1080,7 @@ Receiving objects: 100% (150/150), 2.5 MiB | 5.2 MiB/s, done.
 ### Step 2: Deploy Everything (5 minutes)
 ```bash
 # Deploy complete DevOps pipeline
-./deploy-all.sh
+./final-setup.sh
 ```
 
 **Expected Output:** (See complete output above in Quick Start section)
@@ -1088,7 +1088,7 @@ Receiving objects: 100% (150/150), 2.5 MiB | 5.2 MiB/s, done.
 ### Step 3: Verify Everything is Working (1 minute)
 ```bash
 # Check deployment status
-./deploy-all.sh status
+kubectl get pods --all-namespaces
 ```
 
 **Expected Output:**

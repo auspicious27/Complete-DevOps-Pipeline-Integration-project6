@@ -17,37 +17,28 @@ git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-p
 cd Complete-DevOps-Pipeline-Integration-project6
 ```
 
-### Step 2: Run Smart Setup
+### Step 2: Run Final Setup
 ```bash
-# Make scripts executable
-chmod +x *.sh
+# Make script executable
+chmod +x final-setup.sh
 
-# Run the smart setup (detects your OS automatically)
-./smart-setup.sh
+# Run the final setup (works on all OS)
+./final-setup.sh
 ```
 
 **That's it!** The script will:
-- Detect your operating system
-- Install all required tools
+- Auto-detect your operating system
+- Install all required tools with fallback methods
 - Set up Kubernetes cluster
 - Deploy the complete DevOps pipeline
 - Show you access URLs and passwords
 
-### Step 3: Fix Velero Issues (If Needed)
-```bash
-# If you see Velero CRD errors, run:
-./fix-velero.sh
-
-# This fixes the common error:
-# "no matches for kind BackupStorageLocation in version velero.io/v1"
-```
-
 ### 📋 **Complete Output Example**
 ```bash
-$ ./smart-setup.sh
+$ ./final-setup.sh
 
 ================================
-Smart DevOps Pipeline Setup
+Final DevOps Pipeline Setup
 ================================
 [INFO] Starting automated setup for linux (amzn)
 
@@ -234,9 +225,7 @@ Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /
 100   138  100   138    0     0    478      0 --:--:-- --:--:-- --:--:--   477
 100 57.7M  100 57.7M    0     0  71.9M      0 --:--:-- --:--:-- --:--:-- 71.9M
 [STEP] Installing Minikube
-  % Total    % Received % Xferd  Average Speed   Time    Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100  133M  100  133M    0     0  12.5M      0  0:00:10  0:00:10 --:--:-- 15.7M
+[SUCCESS] Minikube installed successfully
 [STEP] Installing Helm
   % Total    % Received % Xferd  Average Speed   Time    Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -1308,7 +1297,8 @@ kubectl rollout restart deployment/sample-web-app -n sample-app-prod
 # Error: "ensure CRDs are installed first"
 
 # Quick Fix:
-./fix-velero.sh
+# Re-run the final-setup.sh script
+./final-setup.sh
 
 # Manual Fix:
 kubectl apply -f backup/velero-install.yaml
