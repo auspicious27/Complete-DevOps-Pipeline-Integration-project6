@@ -40,67 +40,269 @@ $ ./smart-setup.sh
 ================================
 Smart DevOps Pipeline Setup
 ================================
-[INFO] Starting automated setup for darwin (macos)
+[INFO] Starting automated setup for linux (amzn)
 
 ================================
 Detecting Operating System
 ================================
-[OS-INFO] Detected: macOS
-[OS-INFO] Distribution: macOS
-[SUCCESS] OS Detection completed: darwin (macos)
+[OS-INFO] Detected: Linux
+[OS-INFO] Distribution: Amazon Linux 2023.9.20250929
+[SUCCESS] OS Detection completed: linux (amzn)
 
 ================================
 Checking System Requirements
 ================================
-[INFO] Available RAM: 16GB
-[INFO] Available disk space: 200G
-[INFO] CPU cores: 8
+[INFO] Available RAM: 15GB
+[INFO] Available disk space: 6.3G
+[INFO] CPU cores: 4
 [SUCCESS] System requirements check completed
 
 ================================
 Installing Prerequisites
 ================================
-[STEP] Installing prerequisites for macOS
-[STEP] Installing Homebrew
-[STEP] Installing Docker Desktop
+[STEP] Installing prerequisites for RHEL/CentOS/Fedora/Amazon Linux
+Last metadata expiration check: 0:00:30 ago on Fri Oct 10 09:40:57 2025.
+Dependencies resolved.
+Nothing to do.
+Complete!
+[STEP] Installing basic tools for Amazon Linux (handling curl conflict)
+Last metadata expiration check: 0:00:30 ago on Fri Oct 10 09:40:57 2025.
+Package wget-1.21.3-1.amzn2023.0.4.x86_64 is already installed.
+Package git-2.50.1-1.amzn2023.0.1.x86_64 is already installed.
+Package unzip-6.0-57.amzn2023.0.2.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+[INFO] curl is already available
+[STEP] Installing additional packages for Minikube none driver
+Last metadata expiration check: 0:00:31 ago on Fri Oct 10 09:40:57 2025.
+Dependencies resolved.
+================================================================================
+ Package                  Arch     Version                  Repository     Size
+================================================================================
+Installing:
+ conntrack-tools          x86_64   1.4.6-2.amzn2023.0.2     amazonlinux   208 k
+ socat                    x86_64   1.7.4.2-1.amzn2023.0.2   amazonlinux   303 k
+Installing dependencies:
+ libnetfilter_conntrack   x86_64   1.0.8-2.amzn2023.0.2     amazonlinux    58 k
+ libnetfilter_cthelper    x86_64   1.0.0-21.amzn2023.0.2    amazonlinux    24 k
+ libnetfilter_cttimeout   x86_64   1.0.0-19.amzn2023.0.2    amazonlinux    24 k
+ libnetfilter_queue       x86_64   1.0.5-2.amzn2023.0.2     amazonlinux    30 k
+ libnfnetlink             x86_64   1.0.1-19.amzn2023.0.2    amazonlinux    30 k
+
+Transaction Summary
+================================================================================
+Install  7 Packages
+
+Total download size: 675 k
+Installed size: 2.1 M
+Downloading Packages:
+(1/7): libnetfilter_conntrack-1.0.8-2.amzn2023. 1.6 MB/s |  58 kB     00:00    
+(2/7): libnetfilter_cthelper-1.0.0-21.amzn2023. 639 kB/s |  24 kB     00:00    
+(3/7): conntrack-tools-1.4.6-2.amzn2023.0.2.x86 5.0 MB/s | 208 kB     00:00    
+(4/7): libnetfilter_cttimeout-1.0.0-19.amzn2023 1.1 MB/s |  24 kB     00:00    
+(5/7): libnfnetlink-1.0.1-19.amzn2023.0.2.x86_6 1.5 MB/s |  30 kB     00:00    
+(6/7): libnetfilter_queue-1.0.5-2.amzn2023.0.2. 1.1 MB/s |  30 kB     00:00    
+(7/7): socat-1.7.4.2-1.amzn2023.0.2.x86_64.rpm  5.1 MB/s | 303 kB     00:00    
+--------------------------------------------------------------------------------
+Total                                           4.6 MB/s | 675 kB     00:00     
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1 
+  Installing       : libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64              1/7 
+  Installing       : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64     2/7 
+  Installing       : libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64         3/7 
+  Installing       : libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64    4/7 
+  Installing       : libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64     5/7 
+  Installing       : conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            6/7 
+  Running scriptlet: conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            6/7 
+  Installing       : socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
+  Running scriptlet: socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
+  Verifying        : conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64            1/7 
+  Verifying        : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64     2/7 
+  Verifying        : libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64     3/7 
+  Verifying        : libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64    4/7 
+  Verifying        : libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64         5/7 
+  Verifying        : libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64              6/7 
+  Verifying        : socat-1.7.4.2-1.amzn2023.0.2.x86_64                    7/7 
+
+Installed:
+  conntrack-tools-1.4.6-2.amzn2023.0.2.x86_64                                   
+  libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.x86_64                            
+  libnetfilter_cthelper-1.0.0-21.amzn2023.0.2.x86_64                            
+  libnetfilter_cttimeout-1.0.0-19.amzn2023.0.2.x86_64                           
+  libnetfilter_queue-1.0.5-2.amzn2023.0.2.x86_64                                 
+  libnfnetlink-1.0.1-19.amzn2023.0.2.x86_64                                     
+  socat-1.7.4.2-1.amzn2023.0.2.x86_64                                           
+
+Complete!
+[STEP] Installing Docker
+Last metadata expiration check: 0:00:33 ago on Fri Oct 10 09:40:57 2025.
+Dependencies resolved.
+================================================================================
+ Package              Arch      Version                    Repository      Size
+================================================================================
+Installing:
+ docker               x86_64    25.0.8-1.amzn2023.0.6      amazonlinux     46 M
+Installing dependencies:
+ container-selinux    noarch    4:2.242.0-1.amzn2023       amazonlinux     58 k
+ containerd           x86_64    2.0.6-1.amzn2023.0.1       amazonlinux     26 M
+ iptables-libs        x86_64    1.8.8-3.amzn2023.0.2       amazonlinux    401 k
+ iptables-nft         x86_64    1.8.8-3.amzn2023.0.2       amazonlinux    183 k
+ libcgroup            x86_64    3.0-1.amzn2023.0.1         amazonlinux     75 k
+ libnftnl             x86_64    1.2.2-2.amzn2023.0.2       amazonlinux     84 k
+ pigz                 x86_64    2.5-1.amzn2023.0.3         amazonlinux     83 k
+ runc                 x86_64    1.2.6-1.amzn2023.0.1       amazonlinux    3.7 M
+
+Transaction Summary
+================================================================================
+Install  9 Packages
+
+Total download size: 77 M
+Installed size: 292 M
+Downloading Packages:
+(1/9): container-selinux-2.242.0-1.amzn2023.noa 1.7 MB/s |  58 kB     00:00    
+(2/9): iptables-libs-1.8.8-3.amzn2023.0.2.x86_6 8.2 MB/s | 401 kB     00:00    
+(3/9): iptables-nft-1.8.8-3.amzn2023.0.2.x86_64 7.4 MB/s | 183 kB     00:00    
+(4/9): libcgroup-3.0-1.amzn2023.0.3.x86_64.rpm  2.3 MB/s |  75 kB     00:00    
+(5/9): libnftnl-1.2.2-2.amzn2023.0.2.x86_64.rpm 1.6 MB/s |  84 kB     00:00    
+(6/9): pigz-2.5-1.amzn2023.0.3.x86_64.rpm       2.5 MB/s |  83 kB     00:00    
+(7/9): runc-1.2.6-1.amzn2023.0.1.x86_64.rpm      17 MB/s | 3.7 MB     00:00    
+(8/9): containerd-2.0.6-1.amzn2023.0.1.x86_64.r  39 MB/s |  26 MB     00:00    
+(9/9): docker-25.0.8-1.amzn2023.0.6.x86_64.rpm   39 MB/s |  46 MB     00:01    
+--------------------------------------------------------------------------------
+Total                                            64 MB/s |  77 MB     00:01     
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1 
+  Installing       : runc-1.2.6-1.amzn2023.0.1.x86_64                       1/9 
+  Installing       : containerd-2.0.6-1.amzn2023.0.1.x86_64                 2/9 
+  Running scriptlet: containerd-2.0.6-1.amzn2023.0.1.x86_64                 2/9 
+  Installing       : pigz-2.5-1.amzn2023.0.3.x86_64                         3/9 
+  Installing       : libnftnl-1.2.2-2.amzn2023.0.2.x86_64                   4/9 
+  Installing       : libcgroup-3.0-1.amzn2023.0.1.x86_64                    5/9 
+  Installing       : iptables-libs-1.8.8-3.amzn2023.0.2.x86_64              6/9 
+  Installing       : iptables-nft-1.8.8-3.amzn2023.0.2.x86_64               7/9 
+  Running scriptlet: iptables-nft-1.8.8-3.amzn2023.0.2.x86_64               7/9 
+  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
+  Installing       : container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
+  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          8/9 
+  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
+  Installing       : docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
+  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                    9/9 
+Created symlink /etc/systemd/system/sockets.target.wants/docker.socket → /usr/lib/systemd/system/docker.socket.
+
+  Running scriptlet: container-selinux-4:2.242.0-1.amzn2023.noarch          9/9 
+  Running scriptlet: docker-25.0.8-1.amzn2023.0.6.x86_64                                                           9/9 
+  Verifying        : container-selinux-4:2.242.0-1.amzn2023.noarch                                                 1/9 
+  Verifying        : containerd-2.0.6-1.amzn2023.0.1.x86_64                                                        2/9 
+  Verifying        : docker-25.0.8-1.amzn2023.0.6.x86_64                                                           3/9 
+  Verifying        : iptables-libs-1.8.8-3.amzn2023.0.2.x86_64                                                     4/9 
+  Verifying        : iptables-nft-1.8.8-3.amzn2023.0.2.x86_64                                                      5/9 
+  Verifying        : libcgroup-3.0-1.amzn2023.0.1.x86_64                                                           6/9 
+  Verifying        : libnftnl-1.2.2-2.amzn2023.0.2.x86_64                                                          7/9 
+  Verifying        : pigz-2.5-1.amzn2023.0.3.x86_64                                                                8/9 
+  Verifying        : runc-1.2.6-1.amzn2023.0.1.x86_64                                                              9/9 
+
+Installed:
+  container-selinux-4:2.242.0-1.amzn2023.noarch                containerd-2.0.6-1.amzn2023.0.1.x86_64                  
+  docker-25.0.8-1.amzn2023.0.6.x86_64                          iptables-libs-1.8.8-3.amzn2023.0.2.x86_64               
+  iptables-nft-1.8.8-3.amzn2023.0.2.x86_64                     libcgroup-3.0-1.amzn2023.0.1.x86_64                     
+  libnftnl-1.2.2-2.amzn2023.0.2.x86_64                         pigz-2.5-1.amzn2023.0.3.x86_64                          
+  runc-1.2.6-1.amzn2023.0.1.x86_64                            
+
+Complete!
+Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service.
 [STEP] Installing kubectl
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   138  100   138    0     0    478      0 --:--:-- --:--:-- --:--:--   477
+100 57.7M  100 57.7M    0     0  71.9M      0 --:--:-- --:--:-- --:--:-- 71.9M
 [STEP] Installing Minikube
+  % Total    % Received % Xferd  Average Speed   Time    Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  133M  100  133M    0     0  12.5M      0  0:00:10  0:00:10 --:--:-- 15.7M
 [STEP] Installing Helm
+  % Total    % Received % Xferd  Average Speed   Time    Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 11913  100 11913    0     0   842k      0 --:--:-- --:--:-- --:--:--  894k
+Downloading https://get.helm.sh/helm-v3.19.0-linux-amd64.tar.gz
+Verifying checksum... Done.
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
 [STEP] Installing ArgoCD CLI
 [STEP] Installing Velero CLI
-[SUCCESS] macOS prerequisites installed
+[SUCCESS] RHEL/CentOS/Fedora/Amazon Linux prerequisites installed
 
 ================================
 Setting up Kubernetes Cluster
 ================================
 [STEP] Starting Minikube cluster
-😄  minikube v1.32.0 on Darwin 14.6.0
-✨  Using the docker driver based on existing profile
-👍  Starting control plane node minikube in cluster minikube
-🚀  Booting up node minikube in cluster minikube
-⚡  Creating docker container (CPUs=4, Memory=8192MB) ...
-🐳  Preparing Kubernetes v1.28.3 on Docker 24.0.7 ...
-    ▪ Generating certificates and keys ...
-    ▪ Booting up control plane ...
-    ▪ Configuring RBAC rules ...
+[STEP] Cleaning up any existing Minikube cluster...
+* Successfully deleted all profiles
+* Successfully purged minikube directory located at - [/root/.minikube]
+[WARNING] Running as root detected. Trying --driver=none first, then docker as fallback
+😄  minikube v1.37.0 on Amazon 2023.9.20250929 (xen/amd64)
+❗  minikube skips various validations when --force is supplied; this may lead to unexpected behavior
+✨  Using the none driver based on user configuration
+❗  The 'none' driver does not respect the --cpus flag
+❗  The 'none' driver does not respect the --memory flag
+
+❌  Exiting due to GUEST_MISSING_CONNTRACK: Sorry, Kubernetes 1.34.0 requires crictl to be installed in root's path
+
+[WARNING] None driver failed, trying docker driver with --force
+* Removed all traces of the "minikube" cluster.
+* Successfully deleted all profiles
+* Successfully purged minikube directory located at - [/root/.minikube]
+😄  minikube v1.37.0 on Amazon 2023.9.20250929 (xen/amd64)
+❗  minikube skips various validations when --force is supplied; this may lead to unexpected behavior
+✨  Using the docker driver based on user configuration
+🛑  The "docker" driver should not be used with root privileges. If you wish to continue as root, use --force.
+💡  If you are running minikube within a VM, consider using --driver=none:
+📘    https://minikube.sigs.k8s.io/docs/reference/drivers/none/
+📌  Using Docker driver with root privileges
+👍  Starting "minikube" primary control-plane node in "minikube" cluster
+🚜  Pulling base image v0.0.48 ...
+💾  Downloading Kubernetes v1.34.0 preload ...
+    > gcr.io/k8s-minikube/kicbase...:  488.51 MiB / 488.52 MiB  100.00% 21.49 M
+    > preloaded-images-k8s-v18-v1...:  337.07 MiB / 337.07 MiB  100.00% 13.60 M
+🔥  Creating docker container (CPUs=4, Memory=8192MB) ...
+🐳  Preparing Kubernetes v1.34.0 on Docker 28.4.0 ...
 🔗  Configuring bridge CNI (Container Networking Interface) ...
-    ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
 🔎  Verifying Kubernetes components...
     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
 🌟  Enabled addons: storage-provisioner, default-storageclass
 🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+[STEP] Waiting for cluster to be ready...
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+Kubernetes control plane is running at https://192.168.49.2:8443
+CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 [SUCCESS] Kubernetes cluster setup completed
 
 ================================
 Verifying Installation
 ================================
-[INFO] ✅ Docker: Docker version 24.0.7, build afdd53b
-[INFO] ✅ kubectl: Client Version: version.Info{Major:"1", Minor:"28", GitVersion:"v1.28.3"}
-[INFO] ✅ Minikube: minikube version: v1.32.0
-[INFO] ✅ Helm: version.BuildInfo{Version:"v3.12.0", GitCommit:"c9f554d75773799f72ceef38c51210f1842a1dea"}
-[INFO] ✅ ArgoCD CLI: argocd: v2.8.4+unknown
-[INFO] ✅ Velero CLI: Client: v1.11.1
-[INFO] ✅ Git: git version 2.34.1
+[INFO] ✅ Docker: Docker version 25.0.8, build 0bab007
+[INFO] ✅ kubectl: Installed
+[INFO] ✅ Minikube: v1.37.0
+[INFO] ✅ Helm: v3.19.0+g3d8990f
+[INFO] ✅ ArgoCD CLI: argocd: v3.1.8+becb020
+[INFO] ✅ Velero CLI: Installed
+[INFO] ✅ Git: git version 2.50.1
 [SUCCESS] Installation verification completed
 
 ================================
@@ -112,7 +314,10 @@ Deploying DevOps Pipeline
 ================================
 Complete DevOps Pipeline Integration Deployment
 ================================
-[INFO] Prerequisites check passed
+[SUCCESS] Prerequisites check passed
+================================
+Creating Namespaces
+================================
 [STEP] Creating namespace: argocd
 namespace/argocd created
 [STEP] Creating namespace: jenkins
@@ -131,9 +336,243 @@ namespace/velero created
 Deploying ArgoCD (GitOps)
 ================================
 [STEP] Installing ArgoCD
+Warning: unrecognized format "int64"
 customresourcedefinition.apiextensions.k8s.io/applications.argoproj.io created
 customresourcedefinition.apiextensions.k8s.io/applicationsets.argoproj.io created
+customresourcedefinition.apiextensions.k8s.io/appprojects.argoproj.io created
+serviceaccount/argocd-application-controller created
+serviceaccount/argocd-applicationset-controller created
+serviceaccount/argocd-dex-server created
+serviceaccount/argocd-notifications-controller created
+serviceaccount/argocd-redis created
+serviceaccount/argocd-repo-server created
+serviceaccount/argocd-server created
+role.rbac.authorization.k8s.io/argocd-application-controller created
+role.rbac.authorization.k8s.io/argocd-applicationset-controller created
+role.rbac.authorization.k8s.io/argocd-dex-server created
+role.rbac.authorization.k8s.io/argocd-notifications-controller created
+role.rbac.authorization.k8s.io/argocd-redis created
+role.rbac.authorization.k8s.io/argocd-repo-server created
+role.rbac.authorization.k8s.io/argocd-server created
+clusterrole.rbac.authorization.k8s.io/argocd-application-controller created
+clusterrole.rbac.authorization.k8s.io/argocd-applicationset-controller created
+clusterrole.rbac.authorization.k8s.io/argocd-server created
+rolebinding.rbac.authorization.k8s.io/argocd-application-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-dex-server created
+rolebinding.rbac.authorization.k8s.io/argocd-notifications-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-redis created
+rolebinding.rbac.authorization.k8s.io/argocd-server created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-application-controller created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-server created
+configmap/argocd-cm created
+configmap/argocd-cmd-params-cm created
+configmap/argocd-gpg-keys-cm created
+configmap/argocd-notifications-cm created
+configmap/argocd-rbac-cm created
+configmap/argocd-ssh-known-hosts-cm created
+configmap/argocd-tls-certs-cm created
+secret/argocd-notifications-secret created
+secret/argocd-secret created
+service/argocd-applicationset-controller created
+service/argocd-dex-server created
+service/argocd-metrics created
+service/argocd-notifications-controller-metrics created
+service/argocd-redis created
+service/argocd-repo-server created
+service/argocd-server created
+service/argocd-server-metrics created
+deployment.apps/argocd-applicationset-controller created
+deployment.apps/argocd-dex-server created
+deployment.apps/argocd-notifications-controller created
+deployment.apps/argocd-redis created
+deployment.apps/argocd-repo-server created
 deployment.apps/argocd-server created
+statefulset.apps/argocd-application-controller created
+networkpolicy.networking.k8s.io/argocd-application-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-applicationset-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-dex-server-network-policy created
+networkpolicy.networking.k8s.io/argocd-notifications-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-redis-network-policy created
+networkpolicy.networking.k8s.io/argocd-repo-server-network-policy created
+networkpolicy.networking.k8s.io/argocd-server-network-policy created
+[STEP] Waiting for ArgoCD to be ready
+deployment.apps/argocd-server condition met
+error: timed out waiting for the condition on statefulsets/argocd-application-controller
+[WARNING] ArgoCD application controller wait failed, continuing...
+deployment.apps/argocd-repo-server condition met
+[STEP] Configuring ArgoCD server for external access
+service/argocd-server patched
+[SUCCESS] ArgoCD deployed successfully
+
+================================
+Deploying Jenkins (CI/CD)
+================================
+[STEP] Installing Jenkins
+namespace/jenkins configured
+persistentvolumeclaim/jenkins-pvc created
+deployment.apps/jenkins created
+service/jenkins created
+serviceaccount/jenkins created
+clusterrole.rbac.authorization.k8s.io/jenkins created
+clusterrolebinding.rbac.authorization.k8s.io/jenkins created
+configmap/jenkins-config created
+[STEP] Waiting for Jenkins to be ready
+deployment.apps/jenkins condition met
+[SUCCESS] Jenkins deployed successfully
+
+================================
+Deploying SonarQube (Code Quality)
+================================
+[STEP] Installing SonarQube
+namespace/sonarqube configured
+persistentvolumeclaim/sonarqube-data created
+persistentvolumeclaim/sonarqube-logs created
+persistentvolumeclaim/sonarqube-extensions created
+deployment.apps/sonarqube created
+service/sonarqube created
+deployment.apps/postgresql created
+persistentvolumeclaim/postgresql-data created
+service/postgresql created
+[STEP] Waiting for SonarQube to be ready
+error: timed out waiting for the condition on deployments/sonarqube
+[WARNING] SonarQube deployment wait failed, continuing...
+error: timed out waiting for the condition on deployments/postgresql
+[WARNING] PostgreSQL deployment wait failed, continuing...
+[SUCCESS] SonarQube deployed successfully
+
+================================
+Deploying Trivy (Security Scanning)
+================================
+[STEP] Installing Trivy scanning jobs
+job.batch/trivy-scan-job created
+cronjob.batch/trivy-scheduled-scan created
+namespace/security configured
+[SUCCESS] Trivy deployed successfully
+
+================================
+Deploying Monitoring Stack
+================================
+[STEP] Installing Prometheus
+namespace/monitoring configured
+configmap/prometheus-config created
+deployment.apps/prometheus created
+service/prometheus created
+serviceaccount/prometheus created
+clusterrole.rbac.authorization.k8s.io/prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus created
+persistentvolumeclaim/prometheus-storage created
+[STEP] Installing Grafana
+deployment.apps/grafana created
+service/grafana created
+configmap/grafana-config created
+configmap/grafana-datasources created
+configmap/grafana-dashboard-providers created
+configmap/grafana-dashboards created
+secret/grafana-secrets created
+persistentvolumeclaim/grafana-storage created
+[STEP] Waiting for monitoring stack to be ready
+deployment.apps/prometheus condition met
+error: timed out waiting for the condition on deployments/grafana
+[WARNING] Grafana deployment wait failed, continuing...
+[SUCCESS] Monitoring stack deployed successfully
+
+================================
+Deploying Velero (Backup & DR)
+================================
+[STEP] Installing Velero
+namespace/velero configured
+deployment.apps/velero created
+service/velero created
+serviceaccount/velero created
+clusterrole.rbac.authorization.k8s.io/velero created
+clusterrolebinding.rbac.authorization.k8s.io/velero created
+resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "BackupStorageLocation" in version "velero.io/v1"
+ensure CRDs are installed first
+resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "VolumeSnapshotLocation" in version "velero.io/v1"
+ensure CRDs are installed first
+[STEP] Installing backup schedules
+[STEP] Waiting for Velero to be ready
+[SUCCESS] Velero deployed successfully
+
+================================
+Deploying Sample Applications
+================================
+[STEP] Deploying to Development environment
+[STEP] Deploying to Staging environment
+[STEP] Deploying to Production environment
+[STEP] Deploying Blue-Green setup
+[SUCCESS] Sample applications deployed successfully
+
+================================
+Deploying ArgoCD Applications
+================================
+[STEP] Creating ArgoCD applications
+[SUCCESS] ArgoCD applications deployed successfully
+
+================================
+Deployment Completed Successfully!
+================================
+
+🔗 ArgoCD UI:
+   URL: https://localhost:8080
+   Username: admin
+   Password: Check ArgoCD namespace for initial admin secret
+
+🔗 Jenkins UI:
+   URL: http://localhost:8081
+   Username: admin
+   Password: Check Jenkins namespace for initial admin password
+
+🔗 SonarQube UI:
+   URL: http://localhost:9000
+   Username: admin
+   Password: admin
+
+🔗 Prometheus UI:
+   URL: http://localhost:9090
+
+🔗 Grafana UI:
+   URL: http://localhost:3000
+   Username: admin
+   Password: admin
+
+[WARNING] If using port-forward, run these commands:
+   kubectl port-forward svc/argocd-server -n argocd 8080:443
+   kubectl port-forward svc/jenkins -n jenkins 8081:8080
+   kubectl port-forward svc/sonarqube -n sonarqube 9000:9000
+   kubectl port-forward svc/prometheus -n monitoring 9090:9090
+   kubectl port-forward svc/grafana -n monitoring 3000:3000
+
+================================
+Next Steps
+================================
+
+[INFO] 🎉 Setup completed successfully!
+
+[INFO] 📚 What you can do now:
+   1. Access the web UIs using the information above
+   2. Configure your Git repositories in ArgoCD
+   3. Set up Jenkins pipelines for your applications
+   4. Configure monitoring dashboards in Grafana
+   5. Test backup and restore procedures with Velero
+   6. Deploy your own applications using the sample templates
+
+[INFO] 📖 For detailed instructions, see:
+   - README.md (main documentation)
+   - docs/ directory (step-by-step guides)
+
+[INFO] 🛠️ Useful commands:
+   - Check status: ./deploy-all.sh status
+   - Blue-green deployment: ./blue-green/blue-green-script.sh deploy
+   - Create backup: ./backup/backup-script.sh create my-backup sample-app-dev
+   - Cleanup: ./deploy-all.sh cleanup
+
+[INFO] 📝 Setup log saved to: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
+
+[SUCCESS] 🎉 Complete DevOps Pipeline setup finished successfully!
+[INFO] Setup log: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
 deployment.apps/argocd-application-controller created
 deployment.apps/argocd-repo-server created
 service/argocd-server created

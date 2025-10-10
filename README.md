@@ -556,7 +556,10 @@ chmod +x *.sh && chmod +x */*.sh
 ================================
 Complete DevOps Pipeline Integration Deployment
 ================================
-[INFO] Prerequisites check passed
+[SUCCESS] Prerequisites check passed
+================================
+Creating Namespaces
+================================
 [STEP] Creating namespace: argocd
 namespace/argocd created
 [STEP] Creating namespace: jenkins
@@ -575,24 +578,88 @@ namespace/velero created
 Deploying ArgoCD (GitOps)
 ================================
 [STEP] Installing ArgoCD
+Warning: unrecognized format "int64"
 customresourcedefinition.apiextensions.k8s.io/applications.argoproj.io created
 customresourcedefinition.apiextensions.k8s.io/applicationsets.argoproj.io created
-deployment.apps/argocd-server created
-deployment.apps/argocd-application-controller created
-deployment.apps/argocd-repo-server created
+customresourcedefinition.apiextensions.k8s.io/appprojects.argoproj.io created
+serviceaccount/argocd-application-controller created
+serviceaccount/argocd-applicationset-controller created
+serviceaccount/argocd-dex-server created
+serviceaccount/argocd-notifications-controller created
+serviceaccount/argocd-redis created
+serviceaccount/argocd-repo-server created
+serviceaccount/argocd-server created
+role.rbac.authorization.k8s.io/argocd-application-controller created
+role.rbac.authorization.k8s.io/argocd-applicationset-controller created
+role.rbac.authorization.k8s.io/argocd-dex-server created
+role.rbac.authorization.k8s.io/argocd-notifications-controller created
+role.rbac.authorization.k8s.io/argocd-redis created
+role.rbac.authorization.k8s.io/argocd-repo-server created
+role.rbac.authorization.k8s.io/argocd-server created
+clusterrole.rbac.authorization.k8s.io/argocd-application-controller created
+clusterrole.rbac.authorization.k8s.io/argocd-applicationset-controller created
+clusterrole.rbac.authorization.k8s.io/argocd-server created
+rolebinding.rbac.authorization.k8s.io/argocd-application-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-dex-server created
+rolebinding.rbac.authorization.k8s.io/argocd-notifications-controller created
+rolebinding.rbac.authorization.k8s.io/argocd-redis created
+rolebinding.rbac.authorization.k8s.io/argocd-server created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-application-controller created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller created
+clusterrolebinding.rbac.authorization.k8s.io/argocd-server created
+configmap/argocd-cm created
+configmap/argocd-cmd-params-cm created
+configmap/argocd-gpg-keys-cm created
+configmap/argocd-notifications-cm created
+configmap/argocd-rbac-cm created
+configmap/argocd-ssh-known-hosts-cm created
+configmap/argocd-tls-certs-cm created
+secret/argocd-notifications-secret created
+secret/argocd-secret created
+service/argocd-applicationset-controller created
+service/argocd-dex-server created
+service/argocd-metrics created
+service/argocd-notifications-controller-metrics created
+service/argocd-redis created
+service/argocd-repo-server created
 service/argocd-server created
+service/argocd-server-metrics created
+deployment.apps/argocd-applicationset-controller created
+deployment.apps/argocd-dex-server created
+deployment.apps/argocd-notifications-controller created
+deployment.apps/argocd-redis created
+deployment.apps/argocd-repo-server created
+deployment.apps/argocd-server created
+statefulset.apps/argocd-application-controller created
+networkpolicy.networking.k8s.io/argocd-application-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-applicationset-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-dex-server-network-policy created
+networkpolicy.networking.k8s.io/argocd-notifications-controller-network-policy created
+networkpolicy.networking.k8s.io/argocd-redis-network-policy created
+networkpolicy.networking.k8s.io/argocd-repo-server-network-policy created
+networkpolicy.networking.k8s.io/argocd-server-network-policy created
 [STEP] Waiting for ArgoCD to be ready
 deployment.apps/argocd-server condition met
-deployment.apps/argocd-application-controller condition met
+error: timed out waiting for the condition on statefulsets/argocd-application-controller
+[WARNING] ArgoCD application controller wait failed, continuing...
+deployment.apps/argocd-repo-server condition met
+[STEP] Configuring ArgoCD server for external access
+service/argocd-server patched
 [SUCCESS] ArgoCD deployed successfully
 
 ================================
 Deploying Jenkins (CI/CD)
 ================================
 [STEP] Installing Jenkins
+namespace/jenkins configured
+persistentvolumeclaim/jenkins-pvc created
 deployment.apps/jenkins created
 service/jenkins created
-persistentvolumeclaim/jenkins-pvc created
+serviceaccount/jenkins created
+clusterrole.rbac.authorization.k8s.io/jenkins created
+clusterrolebinding.rbac.authorization.k8s.io/jenkins created
+configmap/jenkins-config created
 [STEP] Waiting for Jenkins to be ready
 deployment.apps/jenkins condition met
 [SUCCESS] Jenkins deployed successfully
@@ -601,28 +668,90 @@ deployment.apps/jenkins condition met
 Deploying SonarQube (Code Quality)
 ================================
 [STEP] Installing SonarQube
+namespace/sonarqube configured
+persistentvolumeclaim/sonarqube-data created
+persistentvolumeclaim/sonarqube-logs created
+persistentvolumeclaim/sonarqube-extensions created
 deployment.apps/sonarqube created
-deployment.apps/postgresql created
 service/sonarqube created
+deployment.apps/postgresql created
+persistentvolumeclaim/postgresql-data created
 service/postgresql created
 [STEP] Waiting for SonarQube to be ready
-deployment.apps/sonarqube condition met
-deployment.apps/postgresql condition met
+error: timed out waiting for the condition on deployments/sonarqube
+[WARNING] SonarQube deployment wait failed, continuing...
+error: timed out waiting for the condition on deployments/postgresql
+[WARNING] PostgreSQL deployment wait failed, continuing...
 [SUCCESS] SonarQube deployed successfully
+
+================================
+Deploying Trivy (Security Scanning)
+================================
+[STEP] Installing Trivy scanning jobs
+job.batch/trivy-scan-job created
+cronjob.batch/trivy-scheduled-scan created
+namespace/security configured
+[SUCCESS] Trivy deployed successfully
 
 ================================
 Deploying Monitoring Stack
 ================================
 [STEP] Installing Prometheus
+namespace/monitoring configured
+configmap/prometheus-config created
 deployment.apps/prometheus created
 service/prometheus created
+serviceaccount/prometheus created
+clusterrole.rbac.authorization.k8s.io/prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus created
+persistentvolumeclaim/prometheus-storage created
 [STEP] Installing Grafana
 deployment.apps/grafana created
 service/grafana created
+configmap/grafana-config created
+configmap/grafana-datasources created
+configmap/grafana-dashboard-providers created
+configmap/grafana-dashboards created
+secret/grafana-secrets created
+persistentvolumeclaim/grafana-storage created
 [STEP] Waiting for monitoring stack to be ready
 deployment.apps/prometheus condition met
-deployment.apps/grafana condition met
+error: timed out waiting for the condition on deployments/grafana
+[WARNING] Grafana deployment wait failed, continuing...
 [SUCCESS] Monitoring stack deployed successfully
+
+================================
+Deploying Velero (Backup & DR)
+================================
+[STEP] Installing Velero
+namespace/velero configured
+deployment.apps/velero created
+service/velero created
+serviceaccount/velero created
+clusterrole.rbac.authorization.k8s.io/velero created
+clusterrolebinding.rbac.authorization.k8s.io/velero created
+resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "BackupStorageLocation" in version "velero.io/v1"
+ensure CRDs are installed first
+resource mapping not found for name: "default" namespace: "velero" from "/root/Complete-DevOps-Pipeline-Integration-project6/backup/velero-install.yaml": no matches for kind "VolumeSnapshotLocation" in version "velero.io/v1"
+ensure CRDs are installed first
+[STEP] Installing backup schedules
+[STEP] Waiting for Velero to be ready
+[SUCCESS] Velero deployed successfully
+
+================================
+Deploying Sample Applications
+================================
+[STEP] Deploying to Development environment
+[STEP] Deploying to Staging environment
+[STEP] Deploying to Production environment
+[STEP] Deploying Blue-Green setup
+[SUCCESS] Sample applications deployed successfully
+
+================================
+Deploying ArgoCD Applications
+================================
+[STEP] Creating ArgoCD applications
+[SUCCESS] ArgoCD applications deployed successfully
 
 ================================
 Deployment Completed Successfully!
@@ -631,12 +760,12 @@ Deployment Completed Successfully!
 🔗 ArgoCD UI:
    URL: https://localhost:8080
    Username: admin
-   Password: abc123def456
+   Password: Check ArgoCD namespace for initial admin secret
 
 🔗 Jenkins UI:
    URL: http://localhost:8081
    Username: admin
-   Password: xyz789uvw012
+   Password: Check Jenkins namespace for initial admin password
 
 🔗 SonarQube UI:
    URL: http://localhost:9000
@@ -651,7 +780,41 @@ Deployment Completed Successfully!
    Username: admin
    Password: admin
 
-🎉 Complete DevOps Pipeline Integration is now deployed!
+[WARNING] If using port-forward, run these commands:
+   kubectl port-forward svc/argocd-server -n argocd 8080:443
+   kubectl port-forward svc/jenkins -n jenkins 8081:8080
+   kubectl port-forward svc/sonarqube -n sonarqube 9000:9000
+   kubectl port-forward svc/prometheus -n monitoring 9090:9090
+   kubectl port-forward svc/grafana -n monitoring 3000:3000
+
+================================
+Next Steps
+================================
+
+[INFO] 🎉 Setup completed successfully!
+
+[INFO] 📚 What you can do now:
+   1. Access the web UIs using the information above
+   2. Configure your Git repositories in ArgoCD
+   3. Set up Jenkins pipelines for your applications
+   4. Configure monitoring dashboards in Grafana
+   5. Test backup and restore procedures with Velero
+   6. Deploy your own applications using the sample templates
+
+[INFO] 📖 For detailed instructions, see:
+   - README.md (main documentation)
+   - docs/ directory (step-by-step guides)
+
+[INFO] 🛠️ Useful commands:
+   - Check status: ./deploy-all.sh status
+   - Blue-green deployment: ./blue-green/blue-green-script.sh deploy
+   - Create backup: ./backup/backup-script.sh create my-backup sample-app-dev
+   - Cleanup: ./deploy-all.sh cleanup
+
+[INFO] 📝 Setup log saved to: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
+
+[SUCCESS] 🎉 Complete DevOps Pipeline setup finished successfully!
+[INFO] Setup log: /root/Complete-DevOps-Pipeline-Integration-project6/setup.log
 ```
 
 ### Check Deployment Status
