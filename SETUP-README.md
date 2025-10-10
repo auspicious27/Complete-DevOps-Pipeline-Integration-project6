@@ -33,6 +33,16 @@ chmod +x final-setup.sh
 - Deploy the complete DevOps pipeline
 - Show you access URLs and passwords
 
+### Supported Operating Systems
+- **Linux**: Ubuntu, Debian, CentOS, RHEL, Amazon Linux, Fedora, Arch Linux
+- **macOS**: Intel Macs and Apple Silicon (M1/M2)
+- **Windows**: WSL2, PowerShell with Chocolatey
+
+### Package Managers Supported
+- **Linux**: apt, yum, dnf, pacman
+- **macOS**: Homebrew
+- **Windows**: Chocolatey
+
 ### 📋 **Complete Output Example**
 ```bash
 $ ./final-setup.sh
@@ -310,11 +320,24 @@ Deploying DevOps Pipeline
 [STEP] Deploying complete DevOps pipeline
 
 ================================
-Complete DevOps Pipeline Integration Deployment
+Final DevOps Pipeline Setup
 ================================
-[SUCCESS] Prerequisites check passed
+[INFO] Starting automated setup for linux (amzn)
 ================================
-Creating Namespaces
+Detecting Operating System
+================================
+[OS-INFO] Detected: Linux
+[OS-INFO] Distribution: Amazon Linux 2023.9.20250929
+[SUCCESS] OS Detection completed: linux (amzn)
+================================
+Checking System Requirements
+================================
+[INFO] Available RAM: 15GB
+[INFO] Available disk space: 73M
+[INFO] CPU cores: 4
+[SUCCESS] System requirements check completed
+================================
+Installing Prerequisites
 ================================
 [STEP] Creating namespace: argocd
 namespace/argocd created

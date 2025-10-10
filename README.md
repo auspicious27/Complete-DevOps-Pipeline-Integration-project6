@@ -13,6 +13,40 @@ This project creates a **complete automated system** that helps developers deplo
 
 This project demonstrates a complete, production-ready DevOps pipeline that integrates all major DevOps tools including Docker, Jenkins, Kubernetes, Ansible, Terraform, Monitoring, and GitOps with ArgoCD.
 
+## 🚀 Quick Start (2 Minutes)
+
+### Step 1: Download the Project
+```bash
+git clone https://github.com/auspicious27/Complete-DevOps-Pipeline-Integration-project6.git
+cd Complete-DevOps-Pipeline-Integration-project6
+```
+
+### Step 2: Run Final Setup
+```bash
+# Make script executable
+chmod +x final-setup.sh
+
+# Run the final setup (works on all OS)
+./final-setup.sh
+```
+
+**That's it!** The script will:
+- Auto-detect your operating system
+- Install all required tools with fallback methods
+- Set up Kubernetes cluster
+- Deploy the complete DevOps pipeline
+- Show you access URLs and passwords
+
+### Supported Operating Systems
+- **Linux**: Ubuntu, Debian, CentOS, RHEL, Amazon Linux, Fedora, Arch Linux
+- **macOS**: Intel Macs and Apple Silicon (M1/M2)
+- **Windows**: WSL2, PowerShell with Chocolatey
+
+### Package Managers Supported
+- **Linux**: apt, yum, dnf, pacman
+- **macOS**: Homebrew
+- **Windows**: Chocolatey
+
 ## 🎯 Real-World Use Cases This Project Solves
 
 ### Use Case 1: E-commerce Website Deployment
@@ -1589,7 +1623,8 @@ kubectl get secrets --all-namespaces
 ### Velero Troubleshooting
 ```bash
 # Fix Velero CRD issues
-./fix-velero.sh
+# Re-run the final-setup.sh script
+./final-setup.sh
 
 # Check Velero CRDs
 kubectl get crd | grep velero
