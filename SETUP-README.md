@@ -713,57 +713,46 @@ Next Steps
 [INFO] Setup log: /Users/sayeed/Downloads/Complete DevOps Pipeline Integration/setup.log
 ```
 
-## 🎯 What the Smart Scripts Do
+## 🎯 What the Final Setup Script Does
 
-### 1. **smart-setup.sh** - Complete Setup
+### **final-setup.sh** - Complete DevOps Pipeline Setup
 ```bash
-./smart-setup.sh                    # Complete setup (default)
-./smart-setup.sh install            # Install prerequisites only
-./smart-setup.sh cluster            # Setup Kubernetes cluster only
-./smart-setup.sh deploy             # Deploy DevOps pipeline only
-./smart-setup.sh verify             # Verify installation
-./smart-setup.sh status             # Show deployment status
+./final-setup.sh                    # Complete setup (default)
 ```
 
-### 2. **smart-deploy.sh** - Intelligent Deployment
-```bash
-./smart-deploy.sh                           # Deploy with auto-detection
-./smart-deploy.sh -e prod -s blue-green     # Deploy to production with blue-green
-./smart-deploy.sh -a my-app -e staging      # Deploy my-app to staging
-./smart-deploy.sh status -e prod            # Show production status
-./smart-deploy.sh rollback -e prod          # Rollback production
-./smart-deploy.sh scale -r 5 -e prod        # Scale production to 5 replicas
-```
+**The script automatically:**
+- Detects your operating system (Linux, macOS, Windows)
+- Installs all prerequisites (Docker, kubectl, Minikube, Helm, etc.)
+- Sets up Kubernetes cluster with Minikube
+- Deploys complete DevOps pipeline (ArgoCD, Jenkins, SonarQube, Prometheus, Grafana, Velero)
+- Shows access URLs and passwords
+
+### **Key Features:**
+- **OS Auto-Detection**: Works on Linux, macOS, Windows
+- **Package Manager Support**: apt, yum, dnf, pacman, brew, choco
+- **Fallback Methods**: curl → wget → package manager
+- **Error Handling**: Continues even if some components fail
+- **Root User Support**: Handles root user scenarios
+- **Minikube Drivers**: Supports docker and none drivers
 
 ## 🎯 Operating System Support
 
-### ✅ **Linux (Ubuntu/Debian)**
+### ✅ **Linux (Ubuntu/Debian/CentOS/RHEL/Amazon Linux/Fedora/Arch Linux)**
 ```bash
-# The script automatically detects and installs:
-- Docker CE
+# final-setup.sh automatically detects and installs:
+- Package manager (apt/yum/dnf/pacman)
+- Docker/Docker CE
 - kubectl
-- Minikube
+- Minikube (with fallback methods)
 - Helm
 - ArgoCD CLI
 - Velero CLI
-- All dependencies
+- All dependencies with conflict resolution
 ```
 
-### ✅ **RHEL/CentOS/Fedora/Amazon Linux**
+### ✅ **macOS (Intel and Apple Silicon)**
 ```bash
-# The script automatically detects and installs:
-- Docker
-- kubectl
-- Minikube
-- Helm
-- ArgoCD CLI
-- Velero CLI
-- All dependencies
-```
-
-### ✅ **macOS**
-```bash
-# The script automatically detects and installs:
+# final-setup.sh automatically detects and installs:
 - Homebrew (if not installed)
 - Docker Desktop
 - kubectl
@@ -774,10 +763,10 @@ Next Steps
 - All dependencies
 ```
 
-### ✅ **Windows**
+### ✅ **Windows (WSL2/PowerShell)**
 ```bash
-# The script automatically detects and installs:
-- Chocolatey (if not installed)
+# final-setup.sh provides PowerShell commands for:
+- Chocolatey installation
 - Docker Desktop
 - kubectl
 - Minikube
@@ -792,7 +781,7 @@ Next Steps
 ### Example 1: Ubuntu User
 ```bash
 # User runs:
-./smart-setup.sh
+./final-setup.sh
 
 # Script detects:
 [OS-INFO] Detected: Linux
@@ -818,7 +807,7 @@ Next Steps
 ### Example 2: macOS User
 ```bash
 # User runs:
-./smart-setup.sh
+./final-setup.sh
 
 # Script detects:
 [OS-INFO] Detected: macOS
@@ -845,7 +834,7 @@ Next Steps
 ### Example 3: Windows User
 ```bash
 # User runs:
-./smart-setup.sh
+./final-setup.sh
 
 # Script detects:
 [OS-INFO] Detected: Windows
